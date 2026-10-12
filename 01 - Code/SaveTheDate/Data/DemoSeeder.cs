@@ -13,10 +13,10 @@ public static class DemoSeeder
         var db = services.GetRequiredService<AppDbContext>();
         var user = await users.FindByEmailAsync("demo@savethedate.local");
         if (user is not null) return;
-        user = new ApplicationUser { UserName = "demo@savethedate.local", Email = "demo@savethedate.local", DisplayName = "Sofía" };
+        user = new ApplicationUser { UserName = "demo@savethedate.local", Email = "demo@savethedate.local", DisplayName = "Mili y Armando" };
         var result = await users.CreateAsync(user);
         if (!result.Succeeded) throw new InvalidOperationException("No se pudo crear el espacio demo.");
-        var titles = new[] { "Sofía & Mateo", "Los 30 de Valentina", "Una vida juntos" };
+        var titles = new[] { "Mili & Armando", "El cumple de Mili", "Mili y Armando · Una vida juntos" };
         var art = new[] { "wedding", "birthday", "dinner" };
         for (var i = 0; i < 3; i++)
         {
@@ -24,10 +24,10 @@ public static class DemoSeeder
             {
                 OwnerId = user.Id,
                 Title = titles[i],
-                Slug = new[] { "sofia-y-mateo", "valentina-30", "una-vida-juntos" }[i],
+                Slug = new[] { "mili-y-armando", "cumple-de-mili", "mili-y-armando-aniversario" }[i],
                 Kind = (EventKind)i,
                 StartsAtUtc = EventService.ToUtc(DateTime.Today.AddDays(45 + i * 32).AddHours(18), "America/Argentina/Cordoba"),
-                Venue = new[] { "Estancia La Paz, Córdoba", "Casa de Valen, Córdoba", "Jardín de los Olivos, Córdoba" }[i],
+                Venue = new[] { "Estancia La Paz, Córdoba", "Casa de Mili y Armando, Córdoba", "Jardín de los Olivos, Córdoba" }[i],
                 Artwork = art[i],
                 Palette = new[] { "rose", "lavender", "sage" }[i],
                 IsPublished = i == 0
@@ -43,7 +43,7 @@ public static class DemoSeeder
             item.Modules[5].Body = "Elegante, cómodo y con ganas de bailar.";
             var environment = services.GetRequiredService<IWebHostEnvironment>();
             var storage = services.GetRequiredService<IImageStorage>();
-            foreach (var (imageName, caption) in new[] { ("wedding", "El comienzo de algo hermoso"), ("dinner", "Un brindis por lo que viene"), ("birthday", "La parte más dulce") })
+            foreach (var (imageName, caption) in new[] { ("wedding", "Mili y Armando · El comienzo de algo hermoso"), ("dinner", "Mili y Armando · Un brindis por lo que viene"), ("birthday", "Mili y Armando · La parte más dulce") })
             {
                 await using var stream = File.OpenRead(Path.Combine(environment.WebRootPath, "images", imageName + ".jpg"));
                 var name = await storage.SaveAsync(stream);

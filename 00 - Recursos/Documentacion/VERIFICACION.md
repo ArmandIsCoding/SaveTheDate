@@ -1,10 +1,10 @@
-# Verificación de la primera versión
+# Verificación del portal y la portada pública
 
 Fecha: 12 de octubre de 2026. Entorno local: macOS ARM64, SDK .NET 10.0.401, runtime 10.0.12.
 
 ## Automatizada
 
-**13 pruebas correctas, 0 fallidas, 0 omitidas** mediante `dotnet test SaveTheDate.sln`. Las pruebas crean SQLite temporales y aplican la migración real.
+**14 pruebas correctas, 0 fallidas, 0 omitidas** mediante `dotnet test SaveTheDate.sln -c Release`. Las pruebas crean SQLite temporales y aplican la migración real.
 
 | Área | Evidencia |
 | --- | --- |
@@ -21,6 +21,7 @@ Fecha: 12 de octubre de 2026. Entorno local: macOS ARM64, SDK .NET 10.0.401, run
 | Registro y sesión | Registro HTTP real, cookie, acceso al portal, logout y nuevo login. |
 | Protección HTTP | Rechazo de POST sin CSRF, ausencia de acceso demo fuera de Development y 404 de recursos inexistentes. |
 | Recorrido público | Publicar habilita imagen/calendario; RSVP persiste y muestra agradecimiento; despublicar vuelve a ocultar archivos. |
+| Portada pública | Inicio accesible sin sesión; ingreso separado con CSRF; portal protegido. Los enlaces de la portada llevan al registro o a los eventos según la sesión. |
 
 Compilación Release y generación del paquete con `dotnet publish` correctas. Base de datos y archivos privados excluidos de publicación. Consulta de paquetes NuGet: sin vulnerabilidades reportadas por las fuentes consultadas en esta fecha.
 
@@ -37,6 +38,8 @@ Compilación Release y generación del paquete con `dotnet publish` correctas. B
 - Invitación pública: portada, ancla interna, cuenta regresiva activa, fotografías, asistencia y footer.
 - Navegación por anclas corregida para conservar el enlace de la invitación.
 - Sin desbordamiento horizontal en las pantallas móviles inspeccionadas.
+- Portada con tamaños de escritorio y celular: nombres legibles, paletas rosa/salvia/lavanda interactivas, navegación por anclas, preguntas desplegables y enlaces a registro e ingreso.
+- Ejemplos y capturas actualizados con Mili y Armando. Los cambios en SQLite local se limitaron a los ejemplos originales de la cuenta demo, con un respaldo previo fuera del repositorio.
 
 Las capturas de referencia están en `00 - Recursos/Capturas`.
 

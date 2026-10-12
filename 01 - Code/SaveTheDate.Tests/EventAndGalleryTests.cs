@@ -33,7 +33,7 @@ public sealed class EventAndGalleryTests : IAsyncLifetime
     }
 
     public Task DisposeAsync() { Directory.Delete(root, true); return Task.CompletedTask; }
-    Task<Celebration> Create() => events.CreateAsync("Lucía & Tomás", EventKind.Wedding, localDate);
+    Task<Celebration> Create() => events.CreateAsync("Mili & Armando", EventKind.Wedding, localDate);
     static MemoryStream Photo()
     {
         using var bitmap = new SKBitmap(60, 40);
@@ -53,7 +53,7 @@ public sealed class EventAndGalleryTests : IAsyncLifetime
         Assert.Contains(read.Modules, x => x.Kind == ModuleKind.Gallery);
         Assert.Equal(new DateTime(2027, 2, 20, 21, 30, 0), read.StartsAtUtc);
         Assert.Equal(localDate, read.LocalDate);
-        Assert.StartsWith("lucia-tomas-", read.Slug);
+        Assert.StartsWith("mili-armando-", read.Slug);
         Assert.NotEqual(first.Slug, second.Slug);
     }
 

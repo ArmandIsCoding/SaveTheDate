@@ -1,0 +1,64 @@
+.invitation-sample { --sample-bg: #f7ebe4; --sample-ink: #875f55; --sample-border: #d8b7a7; max-width: 510px; margin: auto; }
+.sample-sage { --sample-bg: #edf0e3; --sample-ink: #57664c; --sample-border: #aab79b; }
+.sample-lavender { --sample-bg: #eeebf5; --sample-ink: #756483; --sample-border: #bcb0ce; }
+.sample-composition { position: relative; padding: 20px 50px 25px; }
+.sample-card { position: relative; background: var(--sample-bg); border: 7px solid #fffdf8; border-radius: 180px 180px 4px 4px; box-shadow: 0 22px 45px #58493620, 0 2px 4px #58493612; margin: 0; transform: rotate(4deg); overflow: hidden; transition: background .25s; }
+.sample-photo { position: relative; height: 225px; }
+.sample-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.sample-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 50%, #18261b80); }
+.sample-photo > span { position: absolute; z-index: 1; bottom: 20px; left: 0; width: 100%; text-align: center; font-size: 8px; letter-spacing: 3px; color: #fffdf7; }
+.sample-card figcaption { text-align: center; padding: 11px 10px 21px; color: var(--sample-ink); background-image: radial-gradient(ellipse at 20% 100%, #ffffff70, transparent 80%); }
+.sample-ornament { display: block; font-size: 22px; line-height: 1; margin-bottom: 5px; }
+.sample-card h2 { font-size: 39px; line-height: 1.2; font-weight: 400; letter-spacing: -1px; white-space: nowrap; }
+.sample-card h2 em { font-size: 29px; }
+.sample-card p { margin-top: 9px; font-size: 8px; letter-spacing: 2.2px; color: var(--sample-ink); }
+.sample-rule { display: block; height: 1px; width: 36px; background: var(--sample-border); margin: 15px auto 12px; }
+.sample-message { font-family: var(--serif); font-size: 19px; font-style: italic; line-height: 1.2; display: block; }
+.sample-signoff { display: block; font-size: 20px; margin-top: 7px; line-height: 1; }
+.sample-botanical { position: absolute; width: 180px; height: 290px; top: 3px; right: -30px; transform: rotate(27deg); opacity: .72; }
+.sample-keepsake { position: absolute; bottom: 7px; left: 2px; width: 180px; height: 215px; border: 1px solid #d8ddc9; background: #eaeddf; box-shadow: 0 6px 12px #575d4220; transform: rotate(-12deg); padding: 30px 12px; text-align: center; color: #7e886f; font-family: var(--serif); font-size: 25px; line-height: 1.1; }
+.sample-keepsake::before { content: ""; border: 1px solid #a7b29388; position: absolute; inset: 8px; }
+.keepsake-flower { display: block; margin-top: 12px; font-size: 50px; color: #98a387; }
+.sample-stamp { position: absolute; bottom: 45px; right: 1px; border: 1px solid #a48973; outline: 4px solid #f6f0e4; background: #f6f0e4; width: 90px; height: 90px; border-radius: 50%; transform: rotate(13deg); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8d735e; font-size: 7px; letter-spacing: 1px; line-height: 1.4; box-shadow: 0 5px 10px #5f4c2f10; }
+.sample-stamp em { font-family: var(--serif); font-size: 21px; letter-spacing: -.5px; }
+.sample-stamp > span { font-size: 17px; }
+.sample-selector { margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 5px; color: #697160; flex-wrap: wrap; }
+.sample-selector > span:first-child { font-size: 10px; margin-right: 7px; }
+.sample-swatch { position: relative; display: grid; place-items: center; width: 36px; height: 40px; border-radius: 50%; padding: 0; }
+.sample-swatch::before { content: ""; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #766c6020; background: var(--swatch); }
+.sample-swatch span { position: absolute; color: #47523e; font-size: 12px; }
+.sample-swatch[aria-pressed="true"]::before { outline: 1px solid #828671; outline-offset: 3px; }
+.sample-swatch:hover::before { outline: 1px solid #b0b49e; outline-offset: 3px; }
+.swatch-rose { --swatch: #dfb9a9; }
+.swatch-sage { --swatch: #bec9a9; }
+.swatch-lavender { --swatch: #c8bed9; }
+.sample-palette-name { font-family: var(--serif); font-size: 16px; font-style: italic; min-width: 100px; margin-left: 5px; }
+.sample-caption { text-align: center; font-size: 9px; color: #77796e; margin-top: 3px; }
+@media (max-width: 1100px) and (min-width: 851px) {
+    .sample-composition { padding-inline: 34px; }
+    .sample-card h2 { font-size: 31px; }
+    .sample-photo { height: 220px; }
+    .sample-botanical { right: -25px; width: 150px; }
+    .sample-stamp { width: 75px; height: 75px; right: -9px; }
+    .sample-stamp em { font-size: 19px; }
+}
+@media (max-width: 540px) {
+    .sample-composition { padding: 27px 32px 22px; }
+    .sample-photo { height: 205px; }
+    .sample-card { border-width: 6px; }
+    .sample-card h2 { font-size: clamp(25px, 7.8vw, 33px); }
+    .sample-card figcaption { padding: 9px 5px 15px; }
+    .sample-card h2 em { font-size: 25px; }
+    .sample-card p { font-size: 7px; letter-spacing: 1.5px; }
+    .sample-message { font-size: 18px; }
+    .sample-keepsake { width: 130px; height: 175px; bottom: 10px; left: 4px; font-size: 21px; padding-top: 24px; }
+    .sample-botanical { right: -10px; width: 140px; top: 0; }
+    .sample-stamp { width: 66px; height: 66px; right: 0; bottom: 27px; font-size: 6px; }
+    .sample-stamp em { font-size: 18px; }
+    .sample-stamp > span { font-size: 14px; }
+    .sample-selector { margin-top: 13px; gap: 3px; }
+    .sample-selector > span:first-child { font-size: 9px; margin-right: 3px; }
+    .sample-palette-name { font-size: 14px; min-width: 90px; }
+    .sample-swatch { width: 34px; height: 44px; }
+    .sample-caption { font-size: 8px; }
+}

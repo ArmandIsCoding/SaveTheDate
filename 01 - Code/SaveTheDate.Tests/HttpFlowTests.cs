@@ -37,6 +37,22 @@ public sealed class HttpFlowTests : IClassFixture<TestApplication>
         await client.PostAsync(path, new FormUrlEncodedContent(values.Append(("__RequestVerificationToken", token)).ToDictionary(x => x.Item1, x => x.Item2)));
 
     [Fact]
+    public async Task Visitors_can_discover_the_product_before_signing_in()
+    {
+        using var client = app.Browser();
+        var landing = await client.GetAsync("/");
+        Assert.Equal(HttpStatusCode.OK, landing.StatusCode);
+        var html = await landing.Content.ReadAsStringAsync();
+        Assert.Contains("href=\"/registro\"", html);
+        Assert.Contains("href=\"/ingresar\"", html);
+        Assert.DoesNotContain("action=\"/cuenta/ingresar\"", html);
+        var login = await client.GetStringAsync("/ingresar");
+        Assert.Contains("action=\"/cuenta/ingresar\"", login);
+        Assert.NotEmpty(Token(login));
+        Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/eventos")).StatusCode);
+    }
+
+    [Fact]
     public async Task Register_sign_out_and_sign_in_work_with_real_cookies_and_csrf()
     {
         using var client = app.Browser();
@@ -46,7 +62,10 @@ public sealed class HttpFlowTests : IClassFixture<TestApplication>
         Assert.Equal(HttpStatusCode.Redirect, register.StatusCode); Assert.Equal("/eventos", register.Headers.Location?.OriginalString);
         var dashboard = await client.GetStringAsync("/eventos");
         Assert.Contains("Mis eventos", dashboard);
-        Assert.DoesNotContain("Sofía &amp; Mateo", dashboard);
+        Assert.DoesNotContain("Mili &amp; Armando", dashboard);
+        var landing = await client.GetStringAsync("/");
+        Assert.Contains("href=\"/eventos\"", landing);
+        Assert.DoesNotContain("href=\"/registro\"", landing);
         var logout = await Post(client, "/cuenta/salir", Token(dashboard)); Assert.Equal(HttpStatusCode.Redirect, logout.StatusCode);
         var unauthorized = await client.GetAsync("/eventos"); Assert.Equal(HttpStatusCode.Redirect, unauthorized.StatusCode);
         html = await client.GetStringAsync("/ingresar");

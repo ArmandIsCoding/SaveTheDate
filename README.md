@@ -2,6 +2,8 @@
 
 Portal de eventos e invitaciones digitales con una estética de papel, acuarelas y colores pastel. Interfaz en español, pensada para computadoras y celulares.
 
+Todo empezó con el casamiento de Mili y Armando. Los ejemplos del proyecto llevan sus nombres como homenaje a esa primera historia; las fotografías, fechas y demás detalles de demostración son ilustrativos.
+
 **Blazor Web App (.NET 10) · Interactive Server · ASP.NET Core Identity · Entity Framework Core · SQLite**
 
 ## Empezar
@@ -17,10 +19,11 @@ dotnet run --project "01 - Code/SaveTheDate" --launch-profile http
 
 Abrir **http://localhost:5105**. También se puede abrir la solución `SaveTheDate.sln` en Visual Studio o Rider. En macOS, `iniciar.command` permite iniciar el proyecto con doble clic.
 
-En Development se aplican las migraciones y se crea automáticamente un espacio demo con tres eventos y fotografías. El botón **Explorar el espacio demo** permite entrar sin credenciales. Para probar el aislamiento entre cuentas, usar **Crear una cuenta**. El demo y su acceso directo no existen fuera de Development.
+La portada pública está en `/` y el ingreso en `/ingresar`. En Development se aplican las migraciones y se crea automáticamente un espacio demo con tres eventos y fotografías. En la página de ingreso, el botón **Explorar el espacio demo** permite entrar sin credenciales. Para probar el aislamiento entre cuentas, usar **Crear una cuenta**. El demo y su acceso directo no existen fuera de Development.
 
 ## Qué está implementado
 
+- Portada pública con presentación del producto, muestra de invitación con tres paletas interactivas, pasos, preguntas frecuentes y acceso al registro o al espacio personal según la sesión.
 - Registro, ingreso, cierre de sesión y cookies de Identity; bloqueo temporal por intentos fallidos.
 - Alta, consulta y edición de eventos propios, búsqueda, filtros, papelera y restauración.
 - Fecha/hora local, zona horaria explícita, nombre, tipo, lugar y enlace personalizable.
@@ -90,4 +93,4 @@ El [plan completo](<00 - Recursos/Documentacion/PLAN.md>), las [decisiones de ar
 
 El código y los recursos originales de SaveTheDate se distribuyen bajo la [licencia MIT](LICENSE). Las fuentes y las fotografías de demostración conservan sus propias licencias, detalladas en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); no se relicencian bajo MIT.
 
-El repositorio incluye únicamente datos ficticios de demostración. La base SQLite, las fotos subidas, los respaldos, las claves, los archivos `.env` y los artefactos de compilación están excluidos por `.gitignore`. Mantener las credenciales en variables de entorno o en un gestor de secretos, nunca en los archivos versionados de configuración. Antes de publicar cambios, revisar también los archivos nuevos: `.gitignore` no reemplaza una revisión de secretos.
+El repositorio incluye ejemplos ilustrativos con los nombres Mili y Armando. La base SQLite, las fotos subidas, los respaldos, las claves, los archivos `.env` y los artefactos de compilación están excluidos por `.gitignore`. Mantener las credenciales en variables de entorno o en un gestor de secretos, nunca en los archivos versionados de configuración. Antes de publicar cambios, revisar también los archivos nuevos: `.gitignore` no reemplaza una revisión de secretos.

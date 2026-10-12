@@ -1,0 +1,14 @@
+@page "/ingresar"
+@layout PublicLayout
+@inject IWebHostEnvironment Environment
+<PageTitle>Ingresar · SaveTheDate</PageTitle>
+<div class="auth-page">
+    <section class="auth-story watercolor"><a class="brand" href="/"><img src="/images/brand.svg" alt="" /><span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a><div class="auth-story-content"><span class="eyebrow">PARA TODO ESO QUE MERECE CELEBRARSE</span><h1>Un gran momento.<br />Una invitación<br /><em>muy tuya.</em></h1><p>Reuní a tus personas favoritas.<br />Nosotros te ayudamos a empezar la historia.</p><div class="auth-photo"><img src="/images/wedding.jpg" alt="Una celebración rodeada de flores y luz" /><span>hecho de pequeños grandes momentos ♡</span></div></div><small>Diseñado con cariño. Para compartir lo que importa.</small></section>
+    <section class="auth-form-wrap"><div class="auth-form"><span class="eyebrow">QUÉ LINDO VERTE POR ACÁ</span><h2>Tu próxima historia<br />te está esperando.</h2><p>Ingresá a tu espacio y seguí creando momentos.</p>
+        @if (!string.IsNullOrEmpty(Error)) { <div class="notice error" role="alert">@Error</div> }
+        <form method="post" action="/cuenta/ingresar" data-enhance="false"><AntiforgeryToken /><label>Correo electrónico<input type="email" name="email" autocomplete="username" placeholder="vos@ejemplo.com" required maxlength="200" /></label><label>Contraseña<input type="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" required maxlength="128" /></label><label class="checkbox-label"><input type="checkbox" name="remember" /> Recordarme en este dispositivo</label><button class="button primary wide" type="submit">Entrar a mi espacio <Icon Name="arrow" /></button></form>
+        <p class="auth-switch">¿Es tu primera celebración? <a href="/registro">Crear una cuenta</a></p>
+        @if (Environment.IsDevelopment()) { <div class="auth-divider"><span>o conocé cómo funciona</span></div><form method="post" action="/cuenta/demo" data-enhance="false"><AntiforgeryToken /><button class="button secondary wide" type="submit"><Icon Name="sparkles" /> Explorar el espacio demo</button><small class="center muted">Demostración local · sin registro</small></form> }
+    </div></section>
+</div>
+@code { [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; } }

@@ -1,0 +1,33 @@
+<div class="invitation-sample sample-@Selected.Key">
+    <div class="sample-composition">
+        <img class="sample-botanical" src="/images/botanical.svg" alt="" width="210" height="315" />
+        <div class="sample-keepsake" aria-hidden="true"><span>una fecha,<br /><em>mil emociones.</em></span><span class="keepsake-flower">✳</span></div>
+        <figure class="sample-card" aria-label="Ejemplo ilustrativo de una invitación de casamiento">
+            <div class="sample-photo"><img src="/images/wedding.jpg" alt="Una pareja abrazada con un ramo de flores a la luz del atardecer" width="1200" height="800" fetchpriority="high" /><span>¡NOS CASAMOS!</span></div>
+            <figcaption>
+                <span class="sample-ornament" aria-hidden="true">✧</span>
+                <h2>Mili <em>&amp;</em> Armando</h2>
+                <p>21 · NOVIEMBRE · 2027</p>
+                <span class="sample-rule" aria-hidden="true"></span>
+                <span class="sample-message">El día más lindo, con nuestras<br />personas favoritas.</span>
+                <span class="sample-signoff" aria-hidden="true">♡</span>
+            </figcaption>
+        </figure>
+        <span class="sample-stamp" aria-hidden="true">HECHA<br /><em>con amor</em><span>♡</span></span>
+    </div>
+    <div class="sample-selector" role="group" aria-label="Probar paletas de la invitación de ejemplo">
+        <span>Probá un color</span>
+        @foreach (var palette in Palettes)
+        {
+            <button type="button" class="sample-swatch swatch-@palette.Key" aria-label="@palette.Name" aria-pressed="@(Selected.Key == palette.Key ? "true" : "false")" title="@palette.Name" @onclick="() => Selected = palette"><span aria-hidden="true">@(Selected.Key == palette.Key ? "✓" : "")</span></button>
+        }
+        <span class="sample-palette-name" aria-live="polite" aria-atomic="true">@Selected.Name</span>
+    </div>
+    <p class="sample-caption">Un ejemplo de lo que puede empezar con vos.</p>
+</div>
+
+@code {
+    private record SamplePalette(string Key, string Name);
+    private static readonly SamplePalette[] Palettes = [new("rose", "Rosa acuarela"), new("sage", "Jardín de salvia"), new("lavender", "Sueño lavanda")];
+    private SamplePalette Selected = Palettes[0];
+}

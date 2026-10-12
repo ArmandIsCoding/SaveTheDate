@@ -1,15 +1,131 @@
 @page "/"
-@page "/ingresar"
 @layout PublicLayout
-@inject IWebHostEnvironment Environment
-<PageTitle>SaveTheDate · Las historias empiezan acá</PageTitle>
-<div class="auth-page">
-    <section class="auth-story watercolor"><a class="brand" href="/"><img src="/images/brand.svg" alt="" /><span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a><div class="auth-story-content"><span class="eyebrow">PARA TODO ESO QUE MERECE CELEBRARSE</span><h1>Un gran momento.<br />Una invitación<br /><em>muy tuya.</em></h1><p>Reuní a tus personas favoritas.<br />Nosotros te ayudamos a empezar la historia.</p><div class="auth-photo"><img src="/images/wedding.jpg" alt="Una celebración rodeada de flores y luz" /><span>hecho de pequeños grandes momentos ♡</span></div></div><small>Diseñado con cariño. Para compartir lo que importa.</small></section>
-    <section class="auth-form-wrap"><div class="auth-form"><span class="eyebrow">QUÉ LINDO VERTE POR ACÁ</span><h2>Tu próxima historia<br />te está esperando.</h2><p>Ingresá a tu espacio y seguí creando momentos.</p>
-        @if (!string.IsNullOrEmpty(Error)) { <div class="notice error" role="alert">@Error</div> }
-        <form method="post" action="/cuenta/ingresar" data-enhance="false"><AntiforgeryToken /><label>Correo electrónico<input type="email" name="email" autocomplete="username" placeholder="vos@ejemplo.com" required maxlength="200" /></label><label>Contraseña<input type="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" required maxlength="128" /></label><label class="checkbox-label"><input type="checkbox" name="remember" /> Recordarme en este dispositivo</label><button class="button primary wide" type="submit">Entrar a mi espacio <Icon Name="arrow" /></button></form>
-        <p class="auth-switch">¿Es tu primera celebración? <a href="/registro">Crear una cuenta</a></p>
-        @if (Environment.IsDevelopment()) { <div class="auth-divider"><span>o conocé cómo funciona</span></div><form method="post" action="/cuenta/demo" data-enhance="false"><AntiforgeryToken /><button class="button secondary wide" type="submit"><Icon Name="sparkles" /> Explorar el espacio demo</button><small class="center muted">Demostración local · sin registro</small></form> }
-    </div></section>
+
+<PageTitle>SaveTheDate · Lo lindo empieza con un «vení»</PageTitle>
+
+<div class="landing">
+    <a class="landing-skip" href="/#bienvenida">Saltar al contenido</a>
+    <header class="landing-header landing-width">
+        <a class="brand" href="/" aria-label="SaveTheDate, inicio"><img src="/images/brand.svg" alt="" width="38" height="38" /><span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a>
+        <nav class="landing-nav" aria-label="Conocé SaveTheDate">
+            <a href="/#como-funciona">Cómo funciona</a>
+            <a href="/#a-tu-manera">A tu manera</a>
+            <a href="/#preguntas">Preguntas</a>
+        </nav>
+        <div class="landing-account">
+            @if (SignedIn)
+            {
+                <a class="button primary" href="/eventos">Mi espacio <Icon Name="arrow" /></a>
+            }
+            else
+            {
+                <a class="landing-login" href="/ingresar">Ingresar</a>
+                <a class="button primary" href="/registro">Crear invitación <Icon Name="arrow" /></a>
+            }
+        </div>
+    </header>
+
+    <main id="bienvenida">
+        <section class="landing-hero landing-width" aria-labelledby="landing-title">
+            <div class="hero-copy">
+                <span class="landing-eyebrow"><span aria-hidden="true">✳</span> INVITACIONES DIGITALES, EMOCIONES REALES</span>
+                <h1 id="landing-title">Lo lindo empieza<br />con un <em>«vení».</em></h1>
+                <p>Tu casamiento, un cumpleaños, una buena excusa para encontrarse. Creá una invitación digital que cuente tu historia y reúna a tus personas favoritas.</p>
+                <div class="hero-actions">
+                    <a class="button primary" href="@StartUrl">@(SignedIn ? "Ir a mis eventos" : "Crear mi invitación") <Icon Name="arrow" /></a>
+                    <a class="landing-text-link" href="/#como-funciona">Descubrí cómo <Icon Name="down" /></a>
+                </div>
+                <div class="hero-postscript"><span aria-hidden="true">♡</span> Con tus fotos. A tu manera. En un solo enlace.</div>
+            </div>
+            <div class="hero-art">
+                <LandingInvitation @rendermode="InteractiveServer" />
+            </div>
+        </section>
+
+        <div class="occasion-strip" aria-label="Para todas tus celebraciones">
+            <span>CASAMIENTOS</span><i aria-hidden="true">✧</i><span>CUMPLEAÑOS</span><i aria-hidden="true">✧</i><span>ANIVERSARIOS</span><i aria-hidden="true">✧</i><span>Y ESOS ENCUENTROS PORQUE SÍ</span>
+        </div>
+
+        <section class="landing-how landing-width" id="como-funciona" aria-labelledby="how-title">
+            <div class="section-heading">
+                <span class="landing-eyebrow">DE LA ILUSIÓN AL PRIMER INVITADO</span>
+                <h2 id="how-title">Vos ponés la historia.<br /><em>Acá empieza la invitación.</em></h2>
+                <p>Un espacio sencillo para darle forma a lo que imaginás.</p>
+            </div>
+            <div class="landing-steps">
+                <article><span class="step-mark"><span>01</span><Icon Name="calendar" /></span><h3>Guardá esa fecha.</h3><p>Creá tu cuenta y contanos qué vas a celebrar, cuándo y dónde. Cada evento tiene su propio espacio.</p></article>
+                <article><span class="step-mark"><span>02</span><Icon Name="sparkles" /></span><h3>Hacela muy tuya.</h3><p>Elegí una paleta, sumá tus fotos y armá la invitación con los detalles que hacen especial tu encuentro.</p></article>
+                <article><span class="step-mark"><span>03</span><Icon Name="heart" /></span><h3>Deciles «te espero».</h3><p>Publicá y compartí el enlace. Tus invitados encuentran la información y vos recibís sus confirmaciones.</p></article>
+            </div>
+        </section>
+
+        <section class="landing-details" id="a-tu-manera" aria-labelledby="details-title">
+            <div class="landing-width details-grid">
+                <div class="memory-collage">
+                    <figure class="memory-dinner"><img src="/images/dinner.jpg" alt="Mesa de celebración en el ejemplo de Mili y Armando" width="1200" height="800" loading="lazy" /><figcaption>Mili y Armando</figcaption></figure>
+                    <figure class="memory-birthday"><img src="/images/birthday.jpg" alt="Torta de cumpleaños en el ejemplo de Mili" width="1200" height="800" loading="lazy" /><figcaption>un deseo para Mili ♡</figcaption></figure>
+                    <img class="memory-leaf" src="/images/botanical.svg" alt="" width="180" height="270" loading="lazy" />
+                    <span class="memory-note">Que se sienta<br /><em>tan vos.</em></span>
+                </div>
+                <div class="details-copy">
+                    <span class="landing-eyebrow">LOS DETALLES TAMBIÉN ABRAZAN</span>
+                    <h2 id="details-title">Todo lo que hace<br /><em>único a tu día.</em></h2>
+                    <p>Hay una canción, una foto, una historia detrás. Dale a cada una su lugar: agregá, ordená y personalizá las secciones de tu invitación.</p>
+                    <ul class="detail-list">
+                        <li><span><Icon Name="image" /></span><div><h3>Fotos que cuentan algo</h3><p>Una galería propia para cada evento. Subí tus recuerdos desde la compu o el celular.</p></div></li>
+                        <li><span><Icon Name="clock" /></span><div><h3>La emoción de contar los días</h3><p>Una cuenta regresiva para empezar a celebrar incluso antes de encontrarse.</p></div></li>
+                        <li><span><Icon Name="pin" /></span><div><h3>Cada detalle, a mano</h3><p>Lugar, horario, dress code, regalos y música. Sumá lo que tu celebración necesite.</p></div></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-sharing landing-width" aria-labelledby="sharing-title">
+            <div class="sharing-copy"><span class="landing-eyebrow">MENOS MENSAJES SUELTOS, MÁS ILUSIÓN</span><h2 id="sharing-title">Un enlace para invitar.<br /><em>Un lugar para organizar.</em></h2><p>Compartí tu invitación por WhatsApp, correo o donde estén tus personas. Pueden verla y confirmar asistencia sin crear una cuenta.</p><p>En tu espacio, encontrás las respuestas y seguís preparando ese día que ya se siente más cerca.</p><a class="landing-text-link" href="@StartUrl">Empezar mi próxima historia <Icon Name="arrow" /></a></div>
+            <div class="sharing-note watercolor">
+                <span class="note-flower" aria-hidden="true">✳</span>
+                <span class="landing-eyebrow">NUESTRA PRIMERA HISTORIA</span>
+                <p>Todo empezó con<br /><em>Mili y Armando.</em></p>
+                <span class="note-rule" aria-hidden="true"></span>
+                <small>SaveTheDate nació con su casamiento.<br />Hoy crece para acompañar muchas historias más.</small>
+            </div>
+        </section>
+
+        <section class="landing-faq landing-width" id="preguntas" aria-labelledby="faq-title">
+            <div><span class="landing-eyebrow">ANTES DE EMPEZAR</span><h2 id="faq-title">Algunas dudas.<br /><em>Muchas ganas.</em></h2><p>Para que solo tengas que pensar<br />en lo lindo que viene.</p></div>
+            <div class="faq-list">
+                <details><summary>¿Necesito saber diseñar o programar?<span aria-hidden="true">+</span></summary><p>No. Elegís los colores, cargás tus fotos y completás los textos. Podés agregar, ordenar y activar las secciones desde el editor de tu evento, y ver cómo queda antes de publicarlo.</p></details>
+                <details><summary>¿Es solo para casamientos?<span aria-hidden="true">+</span></summary><p>Es para todo eso que merece celebrarse: casamientos, cumpleaños, aniversarios y otros encuentros. Cada evento tiene su diseño, información y galería independientes.</p></details>
+                <details><summary>¿Mis invitados necesitan una cuenta?<span aria-hidden="true">+</span></summary><p>No. Solo tienen que abrir el enlace de tu invitación publicada. Desde ahí pueden consultar los detalles y, si agregás la sección de asistencia, dejarte su respuesta.</p></details>
+                <details><summary>¿Puedo editarla después de compartirla?<span aria-hidden="true">+</span></summary><p>Sí. Podés actualizar textos, fotos y detalles desde tu espacio. Al guardar, los cambios se ven en la invitación. Conservá el mismo enlace para que tus invitados sigan encontrándola.</p></details>
+            </div>
+        </section>
+
+        <section class="landing-finale watercolor" aria-labelledby="finale-title">
+            <img src="/images/botanical.svg" class="finale-leaf" alt="" width="200" height="300" loading="lazy" />
+            <span class="landing-eyebrow">LAS MEJORES HISTORIAS SE COMPARTEN</span>
+            <h2 id="finale-title">Hay una fecha que te hace sonreír.<br /><em>Empecemos por ahí.</em></h2>
+            <p>Tu próxima celebración ya tiene un lugar donde empezar.</p>
+            <a class="button primary" href="@StartUrl">@(SignedIn ? "Volver a mis eventos" : "Crear mi primera invitación") <Icon Name="heart" /></a>
+            @if (!SignedIn) { <small>¿Ya tenés tu espacio? <a href="/ingresar">Ingresá acá</a></small> }
+        </section>
+    </main>
+
+    <footer class="landing-footer landing-width">
+        <a class="brand" href="/" aria-label="SaveTheDate, inicio"><img src="/images/brand.svg" alt="" width="34" height="34" /><span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a>
+        <p>Hecho con cariño. Para compartir lo que importa.</p>
+        <a href="/#bienvenida">Volver arriba <span aria-hidden="true">↑</span></a>
+    </footer>
 </div>
-@code { [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; } }
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    private bool SignedIn;
+    private string StartUrl => SignedIn ? "/eventos" : "/registro";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask is not null)
+            SignedIn = (await AuthenticationStateTask).User.Identity?.IsAuthenticated == true;
+    }
+}
