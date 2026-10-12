@@ -1,0 +1,7 @@
+@page "/eventos/{Id:guid}/vista-previa"
+@attribute [Authorize]
+@layout PublicLayout
+@inject EventService Events
+<PageTitle>Vista previa · SaveTheDate</PageTitle>
+@if (item is null) { <div class="not-found"><h1>No encontramos este evento.</h1><a href="/eventos">Volver a mis eventos</a></div> } else { <InvitationView Event="item" Preview="true" /> }
+@code { [Parameter] public Guid Id { get; set; } Celebration? item; protected override async Task OnParametersSetAsync() => item = await Events.GetAsync(Id); }

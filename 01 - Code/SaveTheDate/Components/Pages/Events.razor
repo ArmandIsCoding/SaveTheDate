@@ -1,0 +1,50 @@
+@page "/eventos"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject EventService EventsService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider Authentication
+@inject ILogger<Events> Logger
+<PageTitle>Mis eventos · SaveTheDate</PageTitle>
+<header class="topbar"><div class="breadcrumb">Mi espacio <span>/</span> <strong>Mis eventos</strong></div><span class="topbar-note"><span class="status-dot"></span> Un lugar para tus mejores momentos</span></header>
+<div class="page-content" id="page-content">
+    <section class="page-heading"><div><div class="eyebrow">CADA ENCUENTRO, UNA HISTORIA</div><h1>Mis eventos<span class="serif-dot">.</span></h1><p>Todo lo que imaginás empieza con una fecha.</p></div><button class="button primary" @onclick="() => showCreate = true"><Icon Name="plus" /> Crear evento</button></section>
+    <section class="welcome-banner watercolor"><div class="welcome-copy"><span class="pill subtle"><Icon Name="heart" /> HECHO PARA CELEBRAR</span><h2>Los momentos pasan.<br /><em>Los recuerdos se quedan.</em></h2><p>Creá una invitación que cuente tu historia.<br />Elegí cada detalle y compartila con quienes más querés.</p><button class="text-button" @onclick="() => showCreate = true">Dale vida a tu próximo encuentro <Icon Name="arrow" /></button></div><div class="banner-art" aria-hidden="true"><div class="art-circle"></div><img class="botanical botanical-one" src="/images/botanical.svg" alt="" /><div class="invitation-paper"><span class="paper-kicker">SAVE THE DATE</span><span class="paper-flower">✳</span><strong>Sofía <i>&</i> Mateo</strong><span class="paper-line"></span><span class="paper-date">UNA NUEVA HISTORIA</span><span class="paper-footer">con vos, es más especial</span></div><span class="art-note">momentos para siempre</span><span class="art-sparkle">✧</span></div></section>
+    @if (error is not null) { <div class="notice error" role="alert">@error</div> }
+    @if (items is null) { <div class="loading-state"><span class="spinner"></span> Preparando tus momentos…</div> }
+    else
+    {
+        <section class="stats-grid" aria-label="Resumen de eventos"><div class="stat"><span class="stat-icon peach"><Icon Name="calendar" /></span><div><span class="stat-label">Eventos creados</span><strong>@items.Count</strong></div><small>Historias por compartir</small></div><div class="stat"><span class="stat-icon sage"><Icon Name="globe" /></span><div><span class="stat-label">Invitaciones publicadas</span><strong>@items.Count(x => x.IsPublished)</strong></div><small>Listas para encontrarse</small></div><div class="stat"><span class="stat-icon lavender"><Icon Name="users" /></span><div><span class="stat-label">Asistentes confirmados</span><strong>@items.SelectMany(x => x.Responses).Where(x => x.Attending).Sum(x => x.PartySize)</strong></div><small>Personas para celebrar</small></div></section>
+        <section class="events-section"><div class="section-toolbar"><div class="tabs" role="group" aria-label="Filtrar eventos"><button class="@(filter == "all" ? "active" : "")" @onclick='() => SetFilter("all")'>Todos <span>@items.Count</span></button><button class="@(filter == "published" ? "active" : "")" @onclick='() => SetFilter("published")'>Publicados</button><button class="@(filter == "draft" ? "active" : "")" @onclick='() => SetFilter("draft")'>Borradores</button><button class="@(filter == "trash" ? "active" : "")" @onclick='() => SetFilter("trash")' title="Papelera"><Icon Name="trash" /></button></div><label class="search-box"><Icon Name="search" /><input aria-label="Buscar eventos" placeholder="Buscar un momento…" @bind="search" @bind:event="oninput" /></label></div>
+        <div class="event-grid">
+            @foreach (var item in Filtered)
+            {
+                <article class="event-card"><div class="event-cover"><img src="@item.CoverUrl" alt="Portada de @item.Title" loading="lazy" /><span class="event-status @(item.IsPublished ? "published" : "draft")"><span></span>@(item.IsPublished ? "Publicado" : "Borrador")</span><span class="event-kind">@ModuleCatalog.KindName(item.Kind)</span></div><div class="event-card-body"><h3>@item.Title</h3><div class="event-detail"><Icon Name="calendar" /><span>@item.LocalDate.ToString("d 'de' MMMM, yyyy")</span></div><div class="event-detail"><Icon Name="pin" /><span>@(string.IsNullOrWhiteSpace(item.Venue) ? "Un lugar por elegir" : item.Venue)</span></div><div class="card-bottom"><span class="guest-count"><Icon Name="users" /> @item.Responses.Where(x => x.Attending).Sum(x => x.PartySize) confirmados</span>@if (filter == "trash") { <button class="text-button" @onclick="() => Restore(item.Id)">Restaurar <Icon Name="back" /></button> } else { <a class="text-button" href="/eventos/@item.Id">Editar evento <Icon Name="arrow" /></a> }</div></div></article>
+            }
+            @if (filter != "trash" && string.IsNullOrWhiteSpace(search)) { <button class="new-event-card" @onclick="() => showCreate = true"><span class="add-circle"><Icon Name="plus" /></span><h3>Una nueva historia</h3><p>Casamientos, cumpleaños<br />y todo lo que merece un brindis.</p><span class="text-button">Crear un evento <Icon Name="arrow" /></span></button> }
+        </div>
+        @if (!Filtered.Any() && (filter == "trash" || !string.IsNullOrWhiteSpace(search))) { <div class="empty-state"><Icon Name="search" /><h3>No hay eventos por acá</h3><p>@(filter == "trash" ? "Los eventos que elimines aparecerán aquí y podrás restaurarlos." : "Probá con otro nombre o cambiá el filtro.")</p></div> }
+        </section>
+        <div class="bottom-tip"><span class="tip-icon"><Icon Name="sparkles" /></span><p><strong>Tu evento, a tu manera.</strong> Combiná módulos, elegí tus fotos y hacé que cada detalle hable de vos.</p><a href="/inspiracion">Encontrá inspiración <Icon Name="arrow" /></a></div>
+    }
+    <footer class="workspace-footer"><span>Hecho con intención. Compartido con amor.</span><span>SaveTheDate <span class="footer-flower">✳</span></span></footer>
+</div>
+@if (showCreate)
+{
+    <div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title"><button class="modal-close icon-button" @onclick="() => showCreate = false" aria-label="Cerrar"><Icon Name="close" /></button><span class="eyebrow">EL PRIMER PASO DE UNA GRAN HISTORIA</span><h2 id="new-title">¿Qué vamos a celebrar?</h2><p>Empezá por lo esencial. Después hacemos magia con los detalles.</p>@if (error is not null) { <div class="notice error" role="alert">@error</div> }<EditForm Model="newEvent" OnValidSubmit="Create" FormName="new-event"><DataAnnotationsValidator /><ValidationSummary /><label>Nombre del evento<InputText @bind-Value="newEvent.Title" placeholder="Por ejemplo, Lucía & Tomás" maxlength="100" /></label><div class="form-row"><label>Tipo de celebración<InputSelect @bind-Value="newEvent.Kind">@foreach (var kind in Enum.GetValues<EventKind>()) { <option value="@kind">@ModuleCatalog.KindName(kind)</option> }</InputSelect></label><label>Fecha y hora (Argentina)<InputDate Type="InputDateType.DateTimeLocal" @bind-Value="newEvent.Date" /></label></div><div class="notice soft"><Icon Name="info" /> Tu evento empieza como borrador. Vos decidís cuándo compartirlo.</div><button class="button primary wide" disabled="@busy" type="submit">@(busy ? "Creando…" : "Crear mi evento") <Icon Name="arrow" /></button></EditForm></section></div>
+}
+@code {
+    List<Celebration>? items;
+    List<Celebration> deleted = [];
+    string filter = "all", search = "";
+    string? error;
+    bool showCreate, busy;
+    NewEventModel newEvent = new();
+    IEnumerable<Celebration> Filtered => (filter == "trash" ? deleted : items ?? []).Where(x => (filter != "published" || x.IsPublished) && (filter != "draft" || !x.IsPublished) && x.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
+    protected override async Task OnInitializedAsync() => await Run(async () => items = await EventsService.ListAsync());
+    async Task SetFilter(string value) { filter = value; if (value == "trash") await Run(async () => deleted = await EventsService.ListAsync(true)); }
+    async Task Create() { if (busy) return; busy = true; await Run(async () => { var item = await EventsService.CreateAsync(newEvent.Title, newEvent.Kind, newEvent.Date); Navigation.NavigateTo($"/eventos/{item.Id}"); }); busy = false; }
+    async Task Restore(Guid id) => await Run(async () => { await EventsService.SetDeletedAsync(id, false); deleted = await EventsService.ListAsync(true); items = await EventsService.ListAsync(); });
+    async Task Run(Func<Task> action) { error = null; try { await action(); } catch (Exception ex) { Logger.LogWarning(ex, "Event operation failed"); error = ex is ValidationException ? ex.Message : "No pudimos completar la operación. Volvé a intentar."; } }
+    class NewEventModel { [Required(ErrorMessage = "Elegí un nombre para tu evento."), StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres.")] public string Title { get; set; } = ""; public EventKind Kind { get; set; } public DateTime Date { get; set; } = DateTime.Today.AddMonths(2).AddHours(18); }
+}

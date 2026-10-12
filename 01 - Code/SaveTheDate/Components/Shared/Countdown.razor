@@ -1,0 +1,13 @@
+@implements IAsyncDisposable
+@if (remaining <= TimeSpan.Zero) { <div class="countdown-arrived">¡Llegó el gran día! <span>♡</span></div> }
+else { <div class="countdown" role="timer" aria-label="Tiempo restante para el evento"><div><strong>@remaining.Days.ToString("00")</strong><span>días</span></div><i>:</i><div><strong>@remaining.Hours.ToString("00")</strong><span>horas</span></div><i>:</i><div><strong>@remaining.Minutes.ToString("00")</strong><span>minutos</span></div><i>:</i><div><strong>@remaining.Seconds.ToString("00")</strong><span>segundos</span></div></div> }
+@code {
+    [Parameter] public DateTime TargetUtc { get; set; }
+    TimeSpan remaining;
+    readonly CancellationTokenSource cancellation = new();
+    Task? ticking;
+    protected override void OnParametersSet() => remaining = TargetUtc - DateTime.UtcNow;
+    protected override void OnAfterRender(bool firstRender) { if (firstRender) ticking = Tick(); }
+    async Task Tick() { using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1)); try { while (await timer.WaitForNextTickAsync(cancellation.Token)) { remaining = TargetUtc - DateTime.UtcNow; await InvokeAsync(StateHasChanged); } } catch (OperationCanceledException) { } }
+    public async ValueTask DisposeAsync() { await cancellation.CancelAsync(); if (ticking is not null) await ticking; cancellation.Dispose(); }
+}

@@ -1,0 +1,13 @@
+@page "/i/{Slug}"
+@layout PublicLayout
+@inject InvitationService Invitations
+@if (item is null) { <PageTitle>Invitación no disponible · SaveTheDate</PageTitle><div class="not-found watercolor"><span class="floral-mark">✧</span><h1>Esta historia todavía<br />no está disponible.</h1><p>Revisá el enlace o consultá con quien organiza.</p><a class="button secondary" href="/">Ir a SaveTheDate</a></div> }
+else { <PageTitle>@item.Title · Estás invitado</PageTitle><InvitationView Event="item" Response="@Response" Error="@Error" /> }
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "respuesta")] public string? Response { get; set; }
+    [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
+    Celebration? item;
+    protected override async Task OnParametersSetAsync() { item = await Invitations.GetAsync(Slug); if (item is null && HttpContext is not null) HttpContext.Response.StatusCode = 404; }
+}

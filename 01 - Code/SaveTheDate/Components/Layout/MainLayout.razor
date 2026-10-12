@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+<div class="app-shell">
+    <aside class="sidebar">
+        <a href="/eventos" class="brand"><img src="/images/brand.svg" alt="" /> <span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a>
+        <span class="workspace-label">TU ESPACIO PARA CELEBRAR</span>
+        <nav aria-label="Navegación principal">
+            <NavLink href="/eventos" Match="NavLinkMatch.All"><Icon Name="grid" /> Mis eventos <span class="nav-dot"></span></NavLink>
+            <NavLink href="/inspiracion"><Icon Name="sparkles" /> Inspiración</NavLink>
+            <NavLink href="/ayuda"><Icon Name="help" /> Primeros pasos</NavLink>
+        </nav>
+        <div class="sidebar-note"><span class="little-star">✧</span><p>Las grandes historias<br />empiezan con un<br /><em>pequeño encuentro.</em></p><span class="note-line"></span></div>
+        <div class="sidebar-bottom"><span class="tiny-label">HECHO PARA TUS MOMENTOS</span><AuthorizeView><Authorized><div class="profile-row"><span class="avatar">@context.User.Identity?.Name?[..1].ToUpperInvariant()</span><div><strong>Mi espacio</strong><small>@context.User.Identity?.Name</small></div><form method="post" action="/cuenta/salir" data-enhance="false"><AntiforgeryToken /><button class="icon-button" title="Cerrar sesión" aria-label="Cerrar sesión"><Icon Name="logout" /></button></form></div></Authorized><NotAuthorized><a class="button secondary" href="/ingresar">Ingresar</a></NotAuthorized></AuthorizeView></div>
+    </aside>
+    <main class="workspace" id="main-content"><a class="skip-link" href="@(new Uri(Navigation.Uri).AbsolutePath + "#page-content")">Saltar al contenido</a>@Body</main>
+</div>
+<div id="blazor-error-ui" role="alert">La conexión se interrumpió. <a href="" class="reload">Recargar</a><a class="dismiss">×</a></div>

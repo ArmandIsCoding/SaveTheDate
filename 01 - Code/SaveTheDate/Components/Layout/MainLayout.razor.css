@@ -1,0 +1,2 @@
+#blazor-error-ui { background: #f9e5e0; bottom: 0; padding: 1rem; position: fixed; width: 100%; display: none; z-index: 1000; }
+#blazor-error-ui .dismiss { position: absolute; right: 1rem; cursor: pointer; }

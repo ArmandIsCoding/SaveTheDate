@@ -1,0 +1,9 @@
+# Keep source files consistent across Windows, macOS and Linux.
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.ttf binary
+*.woff binary
+*.woff2 binary

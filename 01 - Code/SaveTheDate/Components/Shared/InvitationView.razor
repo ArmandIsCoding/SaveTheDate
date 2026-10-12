@@ -1,0 +1,32 @@
+@inject NavigationManager Navigation
+<div class="invitation theme-@Event.Palette">
+@if (Preview) { <div class="preview-notice"><Icon Name="eye" /> Vista previa del organizador · versión guardada <a href="/eventos/@Event.Id">Volver al editor</a></div> }
+@foreach (var module in Event.Modules.Where(x => x.Enabled).OrderBy(x => x.Position))
+{
+    @switch (module.Kind)
+    {
+        case ModuleKind.Header:
+            <header class="invitation-hero"><img class="invitation-cover" src="@Event.CoverUrl" alt="@Event.Title" /><div class="invitation-hero-overlay"></div><div class="invitation-hero-content"><span class="invitation-eyebrow">@module.Title</span><h1>@Event.Title</h1><span class="invitation-divider">✧</span><p class="invitation-date">@Event.LocalDate.ToString("d 'de' MMMM 'de' yyyy")</p><p>@module.Body</p><a class="invitation-scroll" href="@(new Uri(Navigation.Uri).AbsolutePath + "#invitation-details")" aria-label="Descubrir la invitación"><Icon Name="down" /></a></div><span class="hero-small-brand">SAVE THE DATE</span></header>
+            break;
+        case ModuleKind.Countdown:
+            <section class="invitation-section watercolor" id="invitation-details"><span class="floral-mark">✳</span><h2>@module.Title</h2><p>Un momento que soñamos. Un día para compartir.</p><Countdown TargetUtc="Event.StartsAtUtc" @rendermode="InteractiveServer" />@if (!Preview) { <a class="button secondary" href="/i/@Event.Slug/calendario"><Icon Name="calendar" /> Agendar la fecha</a> }</section>
+            break;
+        case ModuleKind.Gallery:
+            <section class="invitation-section photo-section"><span class="eyebrow">INSTANTES QUE NOS HACEN SONREÍR</span><h2>@module.Title</h2>@if (Event.Gallery.Images.Count > 0) { <div class="public-gallery">@foreach (var photo in Event.Gallery.Images.OrderBy(x => x.Position)) { <a href="/media/@photo.Id" target="_blank" rel="noopener" class="public-photo"><img src="/media/@photo.Id" alt="@(string.IsNullOrWhiteSpace(photo.Caption) ? "Un recuerdo de " + Event.Title : photo.Caption)" loading="lazy" />@if (!string.IsNullOrWhiteSpace(photo.Caption)) { <span>@photo.Caption</span> }</a> }</div> } else { <p>Muy pronto, este espacio se llenará de recuerdos.</p><img class="gallery-botanical" src="/images/botanical.svg" alt="" /> }</section>
+            break;
+        case ModuleKind.Rsvp:
+            <section class="invitation-section rsvp-section" id="rsvp"><span class="floral-mark">♡</span><h2>@module.Title</h2><p>@(string.IsNullOrWhiteSpace(module.Body) ? "El mejor regalo es compartir este día con vos." : module.Body)</p>@if (Preview) { <div class="notice soft">El formulario de asistencia estará disponible cuando publiques tu invitación.</div> } else if (Response == "ok") { <div class="rsvp-success" role="status"><Icon Name="check" /><h3>¡Gracias por responder!</h3><p>Tu respuesta ya llegó a quienes organizan.</p></div> } else { @if (!string.IsNullOrEmpty(Error)) { <div class="notice error" role="alert">@Error</div> }<form method="post" action="/i/@Event.Slug/confirmar" class="rsvp-form" data-enhance="false"><AntiforgeryToken /><div class="honeypot" aria-hidden="true"><label>Dejar vacío<input name="website" tabindex="-1" autocomplete="off" /></label></div><div class="form-row"><label>Tu nombre<input name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nombre y apellido" /></label><label>Tu correo<input name="email" type="email" required maxlength="200" autocomplete="email" placeholder="vos@ejemplo.com" /></label></div><div class="form-row"><label>¿Vas a acompañarnos?<select name="attending"><option value="yes">¡Sí, ahí estaré!</option><option value="no">Esta vez no puedo</option></select></label><label>Personas, incluyéndote<input type="number" name="size" value="1" min="1" max="10" required /></label></div><label>Un mensaje para quienes organizan<textarea name="note" maxlength="500" rows="3" placeholder="Algo que quieras contarnos (opcional)"></textarea></label><small>Tu respuesta y tu correo solo estarán disponibles para quien organiza este evento.</small><button class="button primary" type="submit">Enviar mi respuesta <Icon Name="heart" /></button></form> }</section>
+            break;
+        default:
+            <section class="invitation-section content-section @(module.Kind == ModuleKind.Location ? "location-section" : "")"><span class="invitation-module-icon"><Icon Name="@ModuleCatalog.Get(module.Kind).Icon" /></span><h2>@module.Title</h2><p class="preserve-lines">@module.Body</p>@if (module.Kind == ModuleKind.Location) { <p class="location-date">@Event.LocalDate.ToString("dddd d 'de' MMMM · HH:mm") hs</p> }@if (!string.IsNullOrWhiteSpace(module.Detail)) { <p class="preserve-lines module-detail">@module.Detail</p> }@if (!string.IsNullOrWhiteSpace(module.LinkUrl) && ModuleCatalog.SafeUrl(module.LinkUrl)) { <a class="button secondary" href="@module.LinkUrl" target="_blank" rel="noopener noreferrer">@(string.IsNullOrWhiteSpace(module.ButtonText) ? "Ver más" : module.ButtonText) <Icon Name="arrow" /></a> }</section>
+            break;
+    }
+}
+<footer class="invitation-footer watercolor"><span class="floral-mark">✧</span><h2>Los mejores momentos<br /><em>son con vos.</em></h2><p>@Event.Title</p><a href="/" class="brand"><img src="/images/brand.svg" alt="" /><span>save<span class="brand-italic">the</span>date.</span></a><small>Una invitación hecha con amor.</small></footer>
+</div>
+@code {
+    [Parameter, EditorRequired] public Celebration Event { get; set; } = default!;
+    [Parameter] public bool Preview { get; set; }
+    [Parameter] public string? Response { get; set; }
+    [Parameter] public string? Error { get; set; }
+}
