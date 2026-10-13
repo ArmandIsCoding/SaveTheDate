@@ -13,7 +13,7 @@ Navegador ── HTTP/SSR ── páginas públicas y autenticación
                   Entity Framework Core / SQLite
 ```
 
-`Domain` define Celebration, EventModule, EventGallery, GalleryImage, GuestResponse y ApplicationUser. `ModuleCatalog` concentra la información de los once tipos de módulos. `Components` renderiza y recoge interacciones. `EventService`, `GalleryService` e `InvitationService` son la frontera de reglas y acceso. `IImageStorage` permite cambiar el disco local por almacenamiento externo.
+`Domain` define Celebration, EventModule, EventGallery, GalleryImage, GuestResponse y ApplicationUser. `ModuleCatalog` concentra la información de los once tipos de módulos. `Components` renderiza y recoge interacciones. `EventService`, `GalleryService`, `InvitationService` y `AdminService` son la frontera de reglas y acceso. `IImageStorage` permite cambiar el disco local por almacenamiento externo.
 
 ## Persistencia
 
@@ -32,6 +32,16 @@ Identity administra hashes de contraseñas y cookies. Registro/login/logout usan
 `ICurrentUser` obtiene el identificador de la sesión del servidor. Los servicios filtran por OwnerId tanto al leer como al modificar; ocultar botones no es una barrera de seguridad. Las consultas públicas filtran por publicación y baja lógica y nunca incluyen respuestas de invitados.
 
 La cuenta demo no tiene contraseña y se crea únicamente en Development. La ruta de acceso demo se registra únicamente en ese entorno.
+
+## Superadministración
+
+Las páginas `/administracion` usan SSR y la política `SuperAdministration`. `SuperAdminHandler` exige una identidad autenticada y consulta en SQLite el rol `SuperAdmin` y la marca de seguridad del usuario. `AdminService` repite esa autorización en cada operación; `AuthorizeView` solo controla la navegación visible. Retirar el rol invalida las siguientes consultas sin esperar a la renovación de cookies.
+
+`AdminProvisioning` asigna o revoca el rol mediante un comando local sobre cuentas existentes; no hay asignación desde registro o una API. El modo comando sale antes de migrar, sembrar demos o iniciar el servidor. Las tablas de Identity ya existen, por lo que no se agrega una migración.
+
+Las consultas usan proyecciones, recuentos en SQLite, paginación y `AsNoTracking`. No se exponen hashes, tokens ni marcas de seguridad. Los correos y mensajes de invitados están disponibles únicamente dentro del detalle autorizado. Las páginas y `/administracion/media/{id}` envían `Cache-Control: private, no-store` y `X-Robots-Tag: noindex, nofollow`. Esa ruta de imágenes valida el permiso incluso cuando se abre directamente y no cambia los criterios de la ruta pública `/media`.
+
+El panel es de consulta. La autorización de escritura por propietario de los servicios normales permanece vigente.
 
 ## Imágenes
 

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,11 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityProvider>();
 builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddPolicy(AdminAccess.Policy,
+    policy => policy.RequireAuthenticatedUser().AddRequirements(new SuperAdminRequirement())));
+builder.Services.AddScoped<IAuthorizationHandler, SuperAdminHandler>();
+builder.Services.AddScoped<AdminAccess>();
+builder.Services.AddScoped<AdminService>();
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.RequireUniqueEmail = true;
@@ -29,11 +34,11 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     options.Password.RequireUppercase = false;
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
-}).AddEntityFrameworkStores<AppDbContext>().AddSignInManager().AddDefaultTokenProviders();
+}).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDbContext>().AddSignInManager().AddDefaultTokenProviders();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/ingresar";
-    options.AccessDeniedPath = "/ingresar";
+    options.AccessDeniedPath = "/sin-acceso";
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
@@ -56,6 +61,17 @@ builder.Services.AddRateLimiter(options =>
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 var app = builder.Build();
+if (AdminProvisioning.IsCommand(args))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    try { Environment.ExitCode = await AdminProvisioning.RunAsync(args, scope.ServiceProvider, Console.Out); }
+    catch (Exception)
+    {
+        Console.Error.WriteLine("No se pudo actualizar el acceso. Ejecutá el comando desde la carpeta publicada y verificá la configuración y los permisos de SQLite.");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -64,6 +80,16 @@ if (!app.Environment.IsDevelopment())
 }
 app.Use(async (context, next) =>
 {
+    if (context.Request.Path.StartsWithSegments("/administracion"))
+    {
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers.CacheControl = "private, no-store";
+            context.Response.Headers.Pragma = "no-cache";
+            context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
+            return Task.CompletedTask;
+        });
+    }
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
@@ -76,6 +102,13 @@ app.UseRateLimiter();
 app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapAccountEndpoints();
+app.MapGet("/administracion/media/{id:guid}", async (Guid id, IDbContextFactory<AppDbContext> factory, IImageStorage storage) =>
+{
+    await using var db = await factory.CreateDbContextAsync();
+    var photo = await db.Images.AsNoTracking().Where(x => x.Id == id).Select(x => new { x.StorageName }).SingleOrDefaultAsync();
+    if (photo is null || !File.Exists(storage.GetPath(photo.StorageName))) return Results.NotFound();
+    return Results.File(storage.GetPath(photo.StorageName), "image/webp");
+}).RequireAuthorization(AdminAccess.Policy);
 app.MapGet("/i/{slug}/calendario", async (string slug, InvitationService invitations) =>
 {
     var item = await invitations.GetAsync(slug);

@@ -24,6 +24,7 @@ La portada pública está en `/` y el ingreso en `/ingresar`. En Development se 
 ## Qué está implementado
 
 - Portada pública con presentación del producto, muestra de invitación con tres paletas interactivas, pasos, preguntas frecuentes y acceso al registro o al espacio personal según la sesión.
+- Superadministración privada en `/administracion`: métricas, usuarios y sus eventos, filtros, detalle de módulos/galerías/asistencia y almacenamiento. Permiso asignado explícitamente desde el servidor.
 - Registro, ingreso, cierre de sesión y cookies de Identity; bloqueo temporal por intentos fallidos.
 - Alta, consulta y edición de eventos propios, búsqueda, filtros, papelera y restauración.
 - Fecha/hora local, zona horaria explícita, nombre, tipo, lugar y enlace personalizable.
@@ -33,7 +34,7 @@ La portada pública está en `/` y el ingreso en `/ingresar`. En Development se 
 - Tres paletas: Rosa acuarela, Jardín de salvia y Sueño lavanda.
 - Una galería propia por evento: múltiples fotos, arrastrar/soltar, selector de archivos, captura nativa de cámara, descripción, orden, portada y eliminación.
 - JPG/PNG/WebP, hasta 10 MB por foto, 20 por carga y 100 por galería. Validación por decodificación, orientación EXIF, reducción a 2400 px, conversión a WebP y eliminación de metadatos. HEIC requiere conversión a JPG.
-- RSVP público con validación y registro en SQLite; resumen y detalle de respuestas solo para el organizador. Una respuesta por correo/evento, sin sobrescritura anónima.
+- RSVP público con validación y registro en SQLite; resumen y detalle privados para el organizador y los superadministradores autorizados. Una respuesta por correo/evento, sin sobrescritura anónima.
 - Cuenta regresiva en vivo y descarga de calendario `.ics` en UTC.
 - Fotografías de ejemplo, fuentes y elementos gráficos locales; no se necesitan CDNs para utilizar el sitio.
 
@@ -57,6 +58,18 @@ SaveTheDate.sln
 
 Un único proyecto de aplicación y un proyecto de pruebas. No hay una API separada ni capas de repositorios genéricos innecesarias. Cada operación usa un contexto de base de datos independiente.
 
+## Habilitar tu cuenta de superadministrador
+
+Una cuenta común nunca obtiene este permiso al registrarse. Con la nueva versión publicada, abrir PowerShell en la **carpeta publicada de IIS** y ejecutar:
+
+```powershell
+dotnet .\SaveTheDate.dll --grant-super-admin "tu-correo@ejemplo.com"
+```
+
+Usar el correo de una cuenta ya registrada en esa instalación y después abrir `/administracion`. La cuenta demo no puede obtener el permiso. No hay contraseñas ni correos de administrador preconfigurados en el código. Esta actualización utiliza las tablas de Identity existentes y no agrega migraciones.
+
+Para revocarlo: `dotnet .\SaveTheDate.dll --revoke-super-admin "tu-correo@ejemplo.com"`. Si IIS usa una conexión SQLite personalizada, configurarla también en esa consola antes de ejecutar el comando. Ver el [procedimiento de IIS](<00 - Recursos/Documentacion/OPERACION.md#superadministración-en-iis>).
+
 ## Pruebas
 
 ```sh
@@ -64,7 +77,7 @@ dotnet test SaveTheDate.sln
 dotnet build SaveTheDate.sln -c Release
 ```
 
-Las pruebas usan bases temporales, sin modificar el espacio demo. Cubren registro/cookies/CSRF, autorización entre propietarios, módulos, concurrencia, publicación, privacidad de imágenes, galerías, RSVP y calendario.
+Las pruebas usan bases temporales, sin modificar el espacio demo. Cubren registro/cookies/CSRF, autorización entre propietarios, módulos, concurrencia, publicación, privacidad de imágenes, galerías, RSVP, calendario y superadministración (permisos, revocación inmediata, filtros, métricas y paginación).
 
 ## SQLite y migraciones
 
@@ -85,7 +98,7 @@ Se puede configurar `ConnectionStrings__DefaultConnection` con otra ruta SQLite.
 
 ## Alcance y siguiente etapa
 
-Esta es una primera versión funcional para desarrollo local. No se desplegó a Internet. Antes de habilitar cuentas reales en producción, completar verificación y recuperación de correo, política de privacidad/retención, límites globales de almacenamiento, respaldos, observabilidad, claves de Data Protection persistentes, HTTPS y pruebas en dispositivos físicos. El RSVP no verifica la identidad del invitado. La carga desde la cámara usa el control nativo del navegador y depende del dispositivo.
+La aplicación funciona en local y puede publicarse en IIS. Los cambios del repositorio requieren una nueva publicación en el servidor. Siguen pendientes verificación y recuperación de correo, política de privacidad/retención, límites globales de almacenamiento, respaldos, observabilidad, claves de Data Protection persistentes y pruebas en dispositivos físicos. El RSVP no verifica la identidad del invitado. La carga desde la cámara usa el control nativo del navegador y depende del dispositivo.
 
 El [plan completo](<00 - Recursos/Documentacion/PLAN.md>), las [decisiones de arquitectura](<00 - Recursos/Documentacion/ARQUITECTURA.md>) y la [guía de operación](<00 - Recursos/Documentacion/OPERACION.md>) detallan lo implementado y lo que sigue.
 

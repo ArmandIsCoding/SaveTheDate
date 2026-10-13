@@ -1,0 +1,25 @@
+@page "/administracion"
+<PageTitle>Panorama general · Administración</PageTitle>
+@if (Data is not null)
+{
+    <div class="admin-heading"><div><span class="eyebrow">EL PULSO DE SAVETHEDATE</span><h1>Cuidemos cada historia<span>.</span></h1><p>Una mirada a las personas y celebraciones que le dan vida a este lugar.</p></div><a class="button secondary" href="/administracion" data-enhance-nav="false"><Icon Name="clock" /> Actualizar</a></div>
+    <section class="admin-welcome watercolor"><div><span class="eyebrow">PEQUEÑOS ENCUENTROS, UN PROYECTO QUE CRECE</span><h2>@Data.RecentEvents.ToString("N0") @(Data.RecentEvents == 1 ? "nueva historia" : "nuevas historias")<br /><em>en los últimos 30 días.</em></h2><p>@Data.UpcomingEvents @(Data.UpcomingEvents == 1 ? "celebración" : "celebraciones") en los próximos 30 días. Cada una, algo lindo por venir.</p></div><div class="admin-welcome-art" aria-hidden="true"><img src="/images/botanical.svg" alt="" /><span>♡</span></div></section>
+    <section class="admin-metrics" aria-label="Métricas del portal">
+        <a class="admin-metric" href="/administracion/usuarios"><span class="admin-metric-icon sage"><Icon Name="users" /></span><span>Usuarios registrados</span><strong>@Data.Users.ToString("N0")</strong><small>@Data.Organizers con eventos activos <Icon Name="arrow" /></small></a>
+        <a class="admin-metric" href="/administracion/eventos"><span class="admin-metric-icon peach"><Icon Name="calendar" /></span><span>Eventos activos</span><strong>@Data.Events.ToString("N0")</strong><small>@Data.Archived en papelera <Icon Name="arrow" /></small></a>
+        <a class="admin-metric" href="/administracion/eventos?estado=published"><span class="admin-metric-icon sage"><Icon Name="globe" /></span><span>Invitaciones publicadas</span><strong>@Data.Published.ToString("N0")</strong><small>@Data.Drafts @(Data.Drafts == 1 ? "borrador" : "borradores") por preparar <Icon Name="arrow" /></small></a>
+        <div class="admin-metric"><span class="admin-metric-icon lavender"><Icon Name="heart" /></span><span>Asistentes confirmados</span><strong>@Data.Guests.ToString("N0")</strong><small>@Data.Responses @(Data.Responses == 1 ? "respuesta" : "respuestas") de asistencia</small></div>
+    </section>
+    <div class="admin-chart-grid">
+        <section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow">CADA MES, NUEVAS FECHAS</span><h2>Así vamos creciendo</h2></div><Icon Name="chart" /></div><p class="admin-description">Eventos creados durante los últimos seis meses, incluidos los que están en papelera.</p><div class="admin-chart" role="img" aria-label="@string.Join(", ", Data.Trend.Select(t => $"{t.Label}: {t.Count} eventos"))">@foreach (var point in Data.Trend) { <div class="admin-chart-column"><strong>@point.Count</strong><div class="admin-chart-track"><span style="height: @(Percent(point.Count))%"></span></div><span>@point.Label</span></div> }</div></section>
+        <section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow">MOTIVOS PARA ENCONTRARSE</span><h2>Qué celebramos</h2></div><Icon Name="sparkles" /></div><div class="admin-distribution">@foreach (var kind in Enum.GetValues<EventKind>()) { var count = Data.Categories.FirstOrDefault(c => c.Kind == kind)?.Count ?? 0; <div><div><span>@ModuleCatalog.KindName(kind)</span><strong>@count</strong></div><div class="admin-meter"><span style="width: @(Data.Events == 0 ? 0 : count * 100 / Data.Events)%"></span></div></div> }</div><a href="/administracion/sistema" class="admin-photo-note"><Icon Name="image" /><span><strong>@Data.Photos.ToString("N0") @(Data.Photos == 1 ? "foto guardada" : "fotos guardadas")</strong><small>Incluye las galerías de la papelera</small></span><Icon Name="arrow" /></a></section>
+    </div>
+    <section class="admin-panel admin-table-panel"><div class="admin-panel-heading"><div><span class="eyebrow">CADA VEZ FALTA MENOS</span><h2>Los próximos encuentros</h2></div><a href="/administracion/eventos?orden=upcoming" class="admin-text-link">Ver próximos <Icon Name="arrow" /></a></div><AdminEventTable Items="Data.Upcoming" EmptyText="Todavía no hay celebraciones futuras. Cuando lleguen, las vas a encontrar acá." /></section>
+    <section class="admin-panel admin-table-panel"><div class="admin-panel-heading"><div><span class="eyebrow">LO ÚLTIMO QUE ESTÁ PASANDO</span><h2>Recién creados</h2></div><a href="/administracion/eventos" class="admin-text-link">Todos los eventos <Icon Name="arrow" /></a></div><AdminEventTable Items="Data.Recent" EmptyText="Las nuevas historias aparecerán acá cuando alguien cree su primer evento." /></section>
+    <p class="admin-updated">Actualizado @AdminFormat.Local(Data.CapturedAtUtc).ToString("dd/MM/yyyy · HH:mm") (Argentina). Los datos de asistencia corresponden a eventos activos.</p>
+}
+@code {
+    private AdminOverview? Data;
+    protected override async Task OnInitializedAsync() => Data = await Admin.OverviewAsync();
+    private int Percent(int count) => count == 0 ? 0 : Math.Max(3, count * 100 / Math.Max(1, Data!.Trend.Max(t => t.Count)));
+}

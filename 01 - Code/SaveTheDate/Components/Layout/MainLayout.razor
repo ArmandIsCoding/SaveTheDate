@@ -8,6 +8,7 @@
             <NavLink href="/eventos" Match="NavLinkMatch.All"><Icon Name="grid" /> Mis eventos <span class="nav-dot"></span></NavLink>
             <NavLink href="/inspiracion"><Icon Name="sparkles" /> Inspiración</NavLink>
             <NavLink href="/ayuda"><Icon Name="help" /> Primeros pasos</NavLink>
+            <AuthorizeView Policy="@AdminAccess.Policy"><Authorized><NavLink href="/administracion"><Icon Name="shield" /> Administración</NavLink></Authorized></AuthorizeView>
         </nav>
         <div class="sidebar-note"><span class="little-star">✧</span><p>Las grandes historias<br />empiezan con un<br /><em>pequeño encuentro.</em></p><span class="note-line"></span></div>
         <div class="sidebar-bottom"><span class="tiny-label">HECHO PARA TUS MOMENTOS</span><AuthorizeView><Authorized><div class="profile-row"><span class="avatar">@context.User.Identity?.Name?[..1].ToUpperInvariant()</span><div><strong>Mi espacio</strong><small>@context.User.Identity?.Name</small></div><form method="post" action="/cuenta/salir" data-enhance="false"><AntiforgeryToken /><button class="icon-button" title="Cerrar sesión" aria-label="Cerrar sesión"><Icon Name="logout" /></button></form></div></Authorized><NotAuthorized><a class="button secondary" href="/ingresar">Ingresar</a></NotAuthorized></AuthorizeView></div>

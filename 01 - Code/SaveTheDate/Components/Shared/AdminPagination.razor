@@ -1,0 +1,7 @@
+<nav class="admin-pagination" aria-label="Páginas de resultados"><span>@Total resultado@(Total == 1 ? "" : "s") · Página @Page de @Pages</span><div>@if (Page > 1) { <a class="button secondary" href="@Link(Page - 1)"><Icon Name="back" /> Anterior</a> }@if (Page < Pages) { <a class="button secondary" href="@Link(Page + 1)">Siguiente <Icon Name="arrow" /></a> }</div></nav>
+@code {
+    [Parameter] public int Total { get; set; }
+    [Parameter] public int Page { get; set; }
+    [Parameter] public int Pages { get; set; }
+    [Parameter, EditorRequired] public Func<int, string> Link { get; set; } = default!;
+}

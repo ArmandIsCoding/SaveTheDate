@@ -1,0 +1,36 @@
+@page "/administracion/eventos"
+<PageTitle>Eventos · Administración</PageTitle>
+<div class="admin-heading"><div><span class="eyebrow">UN LUGAR PARA TODAS LAS CELEBRACIONES</span><h1>@(OwnerData is null ? "Todas las historias" : "Las historias de " + OwnerData.Name)<span>.</span></h1><p>@(OwnerData is null ? "Publicados, borradores y papelera. Cada evento, con su organizador y sus detalles." : OwnerData.Email)</p></div><span class="admin-heading-icon"><Icon Name="calendar" /></span></div>
+@if (OwnerData is not null) { <div class="admin-owner-summary"><span class="admin-avatar">@AdminFormat.Initials(OwnerData.Name)</span><p><strong>@OwnerData.Events @(OwnerData.Events == 1 ? "activo" : "activos")</strong> · @OwnerData.Published @(OwnerData.Published == 1 ? "publicado" : "publicados") · @OwnerData.Drafts @(OwnerData.Drafts == 1 ? "borrador" : "borradores") · @OwnerData.Archived en papelera</p><a href="/administracion/eventos" class="admin-text-link">Ver todos los eventos <Icon Name="close" /></a></div> }
+@if (!string.IsNullOrEmpty(Owner) && OwnerData is null) { <div class="admin-empty"><h2>No encontramos ese usuario.</h2><a href="/administracion/usuarios" class="button secondary">Volver a usuarios</a></div> }
+else
+{
+    <section class="admin-panel admin-table-panel">
+        <form method="get" action="/administracion/eventos" data-enhance="false" class="admin-filters">
+            @if (!string.IsNullOrEmpty(Owner)) { <input type="hidden" name="usuario" value="@Owner" /> }
+            <label class="admin-search">Buscar evento<input name="buscar" value="@Search" placeholder="Evento, enlace u organizador" maxlength="200" /></label>
+            <label>Estado<select name="estado"><option value="active" selected="@(Status is null or "active")">Activos</option><option value="published" selected="@(Status == "published")">Publicados</option><option value="draft" selected="@(Status == "draft")">Borradores</option><option value="archived" selected="@(Status == "archived")">En papelera</option><option value="all" selected="@(Status == "all")">Todos, incluida papelera</option></select></label>
+            <label>Celebración<select name="tipo"><option value="">Todos los tipos</option>@foreach (var kind in Enum.GetValues<EventKind>()) { <option value="@((int)kind)" selected="@(Kind == ((int)kind).ToString())">@ModuleCatalog.KindName(kind)</option> }</select></label>
+            <label>Orden<select name="orden"><option value="recent" selected="@(Order != "upcoming")">Recién creados</option><option value="upcoming" selected="@(Order == "upcoming")">Próximos encuentros</option></select></label>
+            <button class="button primary" type="submit"><Icon Name="search" /> Buscar</button><a class="admin-text-link" href="@ClearUrl">Limpiar</a>
+        </form>
+        @if (Data is not null) { <AdminEventTable Items="Data.Items" /><AdminPagination Total="Data.Total" Page="Data.Page" Pages="Data.Pages" Link="PageUrl" /> }
+    </section>
+}
+@code {
+    [SupplyParameterFromQuery(Name = "buscar")] public string? Search { get; set; }
+    [SupplyParameterFromQuery(Name = "estado")] public string? Status { get; set; }
+    [SupplyParameterFromQuery(Name = "usuario")] public string? Owner { get; set; }
+    [SupplyParameterFromQuery(Name = "tipo")] public string? Kind { get; set; }
+    [SupplyParameterFromQuery(Name = "orden")] public string? Order { get; set; }
+    [SupplyParameterFromQuery(Name = "pagina")] public int Page { get; set; } = 1;
+    private AdminPage<AdminEventRow>? Data;
+    private AdminUserRow? OwnerData;
+    private string ClearUrl => string.IsNullOrEmpty(Owner) ? "/administracion/eventos" : QueryHelpers.AddQueryString("/administracion/eventos", "usuario", Owner);
+    protected override async Task OnParametersSetAsync()
+    {
+        OwnerData = string.IsNullOrEmpty(Owner) ? null : await Admin.UserAsync(Owner);
+        Data = await Admin.EventsAsync(Search, Status, Owner, Kind, Order, Page);
+    }
+    private string PageUrl(int page) => QueryHelpers.AddQueryString("/administracion/eventos", new Dictionary<string, string?> { ["buscar"] = Search, ["estado"] = Status, ["usuario"] = Owner, ["tipo"] = Kind, ["orden"] = Order, ["pagina"] = page.ToString() });
+}

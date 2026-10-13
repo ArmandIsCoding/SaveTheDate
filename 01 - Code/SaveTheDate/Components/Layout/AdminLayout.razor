@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <a href="/administracion" class="brand"><img src="/images/brand.svg" alt="" /><span>save<span class="brand-italic">the</span>date<span class="brand-dot">.</span></span></a>
+        <span class="admin-role"><Icon Name="shield" /> SUPERADMIN</span>
+        <nav aria-label="Administración">
+            <NavLink href="/administracion" Match="NavLinkMatch.All"><Icon Name="chart" /> Panorama general</NavLink>
+            <NavLink href="/administracion/usuarios"><Icon Name="users" /> Usuarios</NavLink>
+            <NavLink href="/administracion/eventos"><Icon Name="calendar" /> Eventos</NavLink>
+            <NavLink href="/administracion/sistema"><Icon Name="server" /> Almacenamiento</NavLink>
+        </nav>
+        <div class="admin-sidebar-note"><span aria-hidden="true">✳</span><p>Detrás de cada fecha,<br /><em>una historia que cuidar.</em></p></div>
+        <div class="admin-sidebar-bottom"><a href="/eventos"><Icon Name="back" /> Volver a mi espacio</a><a href="/" target="_blank" rel="noopener"><Icon Name="globe" /> Ver la portada</a><form method="post" action="/cuenta/salir" data-enhance="false"><AntiforgeryToken /><button type="submit"><Icon Name="logout" /> Cerrar sesión</button></form></div>
+    </aside>
+    <main class="admin-main" id="admin-content"><a class="skip-link" href="@(new Uri(Navigation.Uri).PathAndQuery + "#admin-content")">Saltar al contenido</a><header class="admin-topbar"><span>SaveTheDate <span>/</span> Administración</span><span class="admin-private"><Icon Name="shield" /> Acceso privado</span></header><div class="admin-content">@Body</div><footer class="admin-footer">Todo empezó con Mili y Armando. <span>Hoy, cuidamos cada nueva historia. ♡</span></footer></main>
+</div>

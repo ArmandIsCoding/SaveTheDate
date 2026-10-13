@@ -1,10 +1,10 @@
-# Verificación del portal y la portada pública
+# Verificación del portal, la portada y la administración
 
-Fecha: 12 de octubre de 2026. Entorno local: macOS ARM64, SDK .NET 10.0.401, runtime 10.0.12.
+Fecha de actualización: 13 de octubre de 2026. Entorno local: macOS ARM64, SDK .NET 10.0.401, runtime 10.0.12.
 
 ## Automatizada
 
-**14 pruebas correctas, 0 fallidas, 0 omitidas** mediante `dotnet test SaveTheDate.sln -c Release`. Las pruebas crean SQLite temporales y aplican la migración real.
+**19 pruebas correctas, 0 fallidas, 0 omitidas** mediante `dotnet test SaveTheDate.sln -c Release`. Las pruebas crean SQLite temporales y aplican la migración real.
 
 | Área | Evidencia |
 | --- | --- |
@@ -23,7 +23,13 @@ Fecha: 12 de octubre de 2026. Entorno local: macOS ARM64, SDK .NET 10.0.401, run
 | Recorrido público | Publicar habilita imagen/calendario; RSVP persiste y muestra agradecimiento; despublicar vuelve a ocultar archivos. |
 | Portada pública | Inicio accesible sin sesión; ingreso separado con CSRF; portal protegido. Los enlaces de la portada llevan al registro o a los eventos según la sesión. |
 
-Compilación Release y generación del paquete con `dotnet publish` correctas. Base de datos y archivos privados excluidos de publicación. Consulta de paquetes NuGet: sin vulnerabilidades reportadas por las fuentes consultadas en esta fecha.
+| Superadministración | Páginas y archivos denegados para visitantes/cuentas comunes; las operaciones de servicio rechazan incluso un claim de rol falsificado. |
+| Permisos | Asignación a cuenta existente e idempotente, rechazo del demo, sesión anterior al alta válida y revocación/marca de seguridad efectiva de inmediato. |
+| Consultas administrativas | Recuentos distinguen activos y papelera; filtros por usuario/estado/tipo; asistencia por tamaño de grupo y paginación de 23 respuestas en dos páginas. |
+| Privacidad administrativa | Galería privada solo por la ruta autorizada, RSVP escapado, hashes/marcas no renderizados, cabeceras no-store/private/noindex. |
+| Almacenamiento | Archivos existentes, tamaño y detección de referencias sin archivo con SQLite y archivos reales temporales. |
+
+Compilación Release y generación del paquete con `dotnet publish` correctas. Base de datos y archivos privados excluidos de publicación. Consulta de paquetes NuGet del 12/10/2026: sin vulnerabilidades reportadas por las fuentes consultadas ese día; esta actualización no cambia dependencias.
 
 ## Navegador
 
@@ -40,6 +46,13 @@ Compilación Release y generación del paquete con `dotnet publish` correctas. B
 - Sin desbordamiento horizontal en las pantallas móviles inspeccionadas.
 - Portada con tamaños de escritorio y celular: nombres legibles, paletas rosa/salvia/lavanda interactivas, navegación por anclas, preguntas desplegables y enlaces a registro e ingreso.
 - Ejemplos y capturas actualizados con Mili y Armando. Los cambios en SQLite local se limitaron a los ejemplos originales de la cuenta demo, con un respaldo previo fuera del repositorio.
+
+Superadministración revisada el 13/10 con una base de prueba separada y datos ficticios de Mili y Armando:
+
+- Entrada desde el enlace protegido del espacio personal; panorama, usuarios, filtros de borradores por propietario, módulos desplegables, fotografías privadas y almacenamiento.
+- Carga correcta de las tres fotos de un borrador sin habilitar su invitación pública.
+- Dashboard y listado de usuarios a 390 × 844 y control de ancho a 320 px, con tablas que desplazan su contenido dentro de la tarjeta. Se corrigió el desbordamiento de una etiqueta accesible de la tabla.
+- Comando real de asignación de rol ejecutado contra la base local de prueba, independiente de la instalación pública.
 
 Las capturas de referencia están en `00 - Recursos/Capturas`.
 

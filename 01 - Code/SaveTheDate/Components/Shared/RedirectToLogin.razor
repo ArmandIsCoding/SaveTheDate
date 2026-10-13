@@ -1,3 +1,10 @@
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider Authentication
 <p>Te llevamos al inicio de sesión…</p>
-@code { protected override void OnInitialized() => Navigation.NavigateTo("/ingresar", forceLoad: true); }
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Authentication.GetAuthenticationStateAsync();
+        Navigation.NavigateTo(state.User.Identity?.IsAuthenticated == true ? "/sin-acceso" : "/ingresar", forceLoad: true);
+    }
+}

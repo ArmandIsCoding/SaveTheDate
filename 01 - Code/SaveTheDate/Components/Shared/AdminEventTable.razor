@@ -1,0 +1,17 @@
+@if (Items.Count == 0)
+{
+    <div class="admin-empty"><Icon Name="calendar" /><h3>Un espacio para lo que viene.</h3><p>@EmptyText</p></div>
+}
+else
+{
+    <div class="admin-table-scroll" role="region" aria-label="Listado de eventos" tabindex="0"><table class="admin-table"><thead><tr><th>Evento / Organizador</th><th>Fecha del evento</th><th>Estado</th><th>Fotos</th><th>Confirmados</th><th><span class="admin-sr-only">Detalle</span></th></tr></thead><tbody>
+        @foreach (var item in Items)
+        {
+            <tr><td><a class="admin-event-title" href="/administracion/eventos/@item.Id">@item.Title</a><a class="admin-owner-link" href="/administracion/eventos?usuario=@Uri.EscapeDataString(item.OwnerId)">@item.OwnerName</a></td><td><span>@AdminFormat.Local(item.StartsAtUtc, item.TimeZoneId).ToString("dd MMM yyyy")</span><small>@ModuleCatalog.KindName(item.Kind)</small></td><td><span class="admin-badge @AdminFormat.StatusClass(item.Published, item.Deleted)">@AdminFormat.Status(item.Published, item.Deleted)</span></td><td>@item.Photos</td><td>@item.Guests <small>@item.Responses @(item.Responses == 1 ? "respuesta" : "respuestas")</small></td><td><a class="admin-row-action" href="/administracion/eventos/@item.Id" aria-label="Ver @item.Title"><Icon Name="arrow" /></a></td></tr>
+        }
+    </tbody></table></div>
+}
+@code {
+    [Parameter, EditorRequired] public List<AdminEventRow> Items { get; set; } = [];
+    [Parameter] public string EmptyText { get; set; } = "No encontramos eventos con estos filtros. Probá con otra búsqueda.";
+}

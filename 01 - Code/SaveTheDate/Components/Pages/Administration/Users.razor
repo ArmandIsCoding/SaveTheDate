@@ -1,0 +1,28 @@
+@page "/administracion/usuarios"
+<PageTitle>Usuarios · Administración</PageTitle>
+<div class="admin-heading"><div><span class="eyebrow">LAS PERSONAS DETRÁS DE CADA HISTORIA</span><h1>Nuestra comunidad<span>.</span></h1><p>Encontrá a cada organizador y conocé los eventos que está preparando.</p></div><span class="admin-heading-icon"><Icon Name="users" /></span></div>
+<section class="admin-panel admin-table-panel">
+    <form method="get" action="/administracion/usuarios" data-enhance="false" class="admin-filters"><label class="admin-search">Buscar usuario<input name="buscar" value="@Search" placeholder="Nombre o correo electrónico" maxlength="200" /></label><label>Actividad<select name="actividad"><option value="" selected="@(string.IsNullOrEmpty(Filter))">Todos los usuarios</option><option value="with-events" selected="@(Filter == "with-events")">Con eventos activos</option><option value="without-events" selected="@(Filter == "without-events")">Sin eventos activos</option></select></label><button class="button primary" type="submit"><Icon Name="search" /> Buscar</button><a class="admin-text-link" href="/administracion/usuarios">Limpiar</a></form>
+    @if (Data is not null)
+    {
+        @if (Data.Total == 0) { <div class="admin-empty"><Icon Name="users" /><h2>No encontramos usuarios.</h2><p>Probá con otro nombre, correo o filtro de actividad.</p></div> }
+        else
+        {
+            <div class="admin-table-scroll" role="region" aria-label="Listado de usuarios" tabindex="0"><table class="admin-table"><thead><tr><th>Persona / Correo</th><th>Eventos activos</th><th>Publicados</th><th>Borradores</th><th>Papelera</th><th>Acceso</th><th><span class="admin-sr-only">Ver eventos</span></th></tr></thead><tbody>
+            @foreach (var user in Data.Items)
+            {
+                <tr><td><div class="admin-person"><span class="admin-avatar">@AdminFormat.Initials(user.Name)</span><div><strong>@user.Name</strong><small>@user.Email</small></div></div></td><td><strong>@user.Events</strong></td><td>@user.Published</td><td>@user.Drafts</td><td>@user.Archived</td><td><span class="admin-badge @(user.SuperAdmin ? "admin" : "neutral")">@(user.SuperAdmin ? "Superadmin" : "Usuario")</span>@if (user.LockoutEnd > DateTimeOffset.UtcNow) { <small>Ingreso bloqueado temporalmente</small> }</td><td><a class="admin-text-link" href="/administracion/eventos?usuario=@Uri.EscapeDataString(user.Id)">Ver eventos <Icon Name="arrow" /></a></td></tr>
+            }
+            </tbody></table></div>
+        }
+        <AdminPagination Total="Data.Total" Page="Data.Page" Pages="Data.Pages" Link="PageUrl" />
+    }
+</section>
+@code {
+    [SupplyParameterFromQuery(Name = "buscar")] public string? Search { get; set; }
+    [SupplyParameterFromQuery(Name = "actividad")] public string? Filter { get; set; }
+    [SupplyParameterFromQuery(Name = "pagina")] public int Page { get; set; } = 1;
+    private AdminPage<AdminUserRow>? Data;
+    protected override async Task OnParametersSetAsync() => Data = await Admin.UsersAsync(Search, Filter, Page);
+    private string PageUrl(int page) => QueryHelpers.AddQueryString("/administracion/usuarios", new Dictionary<string, string?> { ["buscar"] = Search, ["actividad"] = Filter, ["pagina"] = page.ToString() });
+}
