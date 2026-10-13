@@ -4,7 +4,7 @@ Fecha de actualización: 13 de octubre de 2026. Entorno local: macOS ARM64, SDK 
 
 ## Automatizada
 
-**19 pruebas correctas, 0 fallidas, 0 omitidas** mediante `dotnet test SaveTheDate.sln -c Release`. Las pruebas crean SQLite temporales y aplican la migración real.
+**27 pruebas .NET correctas, 0 fallidas, 0 omitidas** mediante `dotnet test "01 - Code/SaveTheDate.Tests" -c Release --no-restore`. Las pruebas crean SQLite temporales y aplican las migraciones reales.
 
 | Área | Evidencia |
 | --- | --- |
@@ -36,6 +36,18 @@ Compilación Release y generación del paquete con `dotnet publish` correctas. B
 El 13/10/2026 se reprodujo en la web publicada el reemplazo de direcciones por enlaces `[email protected]`. Se agregó `no-transform` a las respuestas administrativas, conservando `private, no-store` y la autorización. Se ejecutaron las **6 pruebas dirigidas** de superadministración y portada: todas correctas. Verifican la nueva cabecera en las cuatro páginas administrativas y su ausencia en la portada pública. La comprobación final a través de Cloudflare requiere republicar esta versión en IIS.
 
 ## Navegador
+
+### Integración de Google Maps
+
+- 8 casos .NET nuevos: persistencia y limpieza de ubicaciones independientes, rechazo de IDs malformados, parámetros escapados, prioridad del lugar elegido, compatibilidad de enlaces antiguos y mapas visibles solo en módulos públicos habilitados.
+- 4 pruebas JavaScript sin dependencias externas: selección y error del proveedor, independencia entre módulos, selección lenta descartada al elegir otra y limpieza al desmontar. Ejecutar `node --test "01 - Code/SaveTheDate.Tests/JavaScript/google-maps.test.mjs"`.
+- El adaptador de Google se prueba con un proveedor simulado. Los tests HTTP usan una clave ficticia solo para comprobar el HTML; no envían consultas ni simulan haber obtenido un mapa real.
+- Navegador local: dirección manual ingresada con teclado nativo, botón de indicaciones generado, guardado confirmado, recarga y persistencia comprobadas. Vista de celular sin desbordamiento horizontal.
+- Migración aplicada sobre la base demo existente después de un backup. Los valores anteriores siguen disponibles; las nuevas columnas comienzan vacías.
+- Captura `ubicacion-google-maps-pendiente-clave.png`: estado real antes de configurar la clave, sin mostrar un mapa ficticio.
+- **Pendiente de configuración externa:** sugerencias y mapa reales con Google, cuotas/facturación, restricciones de dominio y verificación en IIS. El usuario todavía no tiene proyecto ni clave de Google Cloud; la guía está en Operación.
+
+### Portal e invitaciones
 
 - Pantalla de ingreso y entrada al demo con cookie real.
 - Portal con los tres eventos de ejemplo.

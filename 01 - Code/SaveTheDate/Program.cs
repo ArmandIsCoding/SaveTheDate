@@ -52,6 +52,8 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<GalleryService>();
 builder.Services.AddScoped<InvitationService>();
+builder.Services.Configure<GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
+builder.Services.AddSingleton<GoogleMaps>();
 builder.Services.AddSingleton<IImageStorage, LocalImageStorage>();
 builder.Services.AddRateLimiter(options =>
 {

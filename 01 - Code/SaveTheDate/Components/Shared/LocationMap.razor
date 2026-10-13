@@ -1,0 +1,11 @@
+@inject GoogleMaps Maps
+@if (Maps.EmbedUrl(Module) is { } url)
+{
+    <div class="location-map">
+        <iframe @key="url" src="@url" title="Mapa: @Module.Title" loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+}
+@code {
+    [Parameter, EditorRequired] public EventModule Module { get; set; } = default!;
+}

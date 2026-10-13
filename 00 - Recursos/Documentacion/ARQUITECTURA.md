@@ -57,6 +57,16 @@ Los archivos están fuera de wwwroot y se entregan por `/media/{id}` solamente a
 
 El calendario serializa la fecha UTC y escapa/splitea líneas de ICS para evitar introducir eventos mediante el contenido.
 
+## Ubicaciones y Google Maps
+
+`LocationEditor` encapsula la selección interactiva del lugar y notifica al editor para actualizar su estado de cambios pendientes. `google-maps.js` carga Places una sola vez, monta el widget oficial `PlaceAutocompleteElement` al expandir el módulo y libera sus listeners con un MutationObserver cuando Blazor lo retira. Una selección lenta anterior no reemplaza otra más reciente. Los errores permiten continuar con la dirección manual.
+
+Cada módulo Location guarda su propio `GooglePlaceId` y una `LocationAddress` ingresada manualmente. El texto formateado que devuelve Google se muestra transitoriamente; no se copia a la base. Seleccionar un lugar limpia la dirección manual y tiene precedencia sobre un LinkUrl antiguo. `EventService` valida longitud/formato y persiste los campos únicamente para Location, conservando la autorización y concurrencia existentes. La migración AddGoogleMapsLocations agrega ambas columnas vacías, sin modificar contenido previo.
+
+`GoogleMaps` construye URLs de destinos fijos de Google con parámetros escapados. `LocationMap` reutiliza el iframe oficial de Embed API en editor, invitación SSR y consulta administrativa. No se admite HTML de iframe ni se resuelven enlaces arbitrarios desde el servidor. Los mapas públicos son lazy y no cargan Places JavaScript. Los módulos ocultos no renderizan mapas; los enlaces anteriores siguen funcionando mientras no se seleccione una ubicación nueva.
+
+`GoogleMaps:BrowserApiKey` se configura fuera de Git. Sin clave no se carga Google: permanece la dirección manual y el enlace externo de indicaciones (Maps URLs no necesita clave). La clave de navegador es visible por diseño y debe restringirse a los dominios y las tres APIs utilizadas. Operación detalla la activación en Google Cloud, la migración y la configuración de IIS.
+
 ## Límites deliberados
 
 - Una base SQLite y un servidor son adecuados para esta etapa. No se afirma capacidad multiinstancia.

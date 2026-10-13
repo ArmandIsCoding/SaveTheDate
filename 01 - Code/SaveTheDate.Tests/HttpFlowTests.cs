@@ -21,6 +21,7 @@ public class TestApplication : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:DefaultConnection", $"Data Source={Path.Combine(Root, "http.db")};Pooling=False");
         builder.UseSetting("Database:ApplyMigrations", "true");
+        builder.UseSetting("GoogleMaps:BrowserApiKey", "synthetic-test-key");
         builder.UseSetting("Logging:LogLevel:Default", "Warning");
         builder.ConfigureServices(services => { services.RemoveAll<IImageStorage>(); services.AddSingleton<IImageStorage>(new LocalImageStorage(new TestEnvironment(Root))); });
     }
@@ -83,6 +84,41 @@ public sealed class HttpFlowTests : IClassFixture<TestApplication>
         Assert.Contains((await client.PostAsync("/cuenta/demo", null)).StatusCode, new[] { HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed });
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/i/no-such-event")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/media/" + Guid.NewGuid())).StatusCode);
+    }
+
+    [Fact]
+    public async Task Public_invitation_renders_only_enabled_maps_and_keeps_old_location_links()
+    {
+        using var scope = app.Services.CreateScope();
+        var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        var owner = Guid.NewGuid().ToString();
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            db.Users.Add(new ApplicationUser { Id = owner, UserName = owner });
+            await db.SaveChangesAsync();
+        }
+        var events = new EventService(factory, new TestUser(owner));
+        var item = await events.CreateAsync("Mili y Armando", EventKind.Wedding, new DateTime(2027, 3, 4, 18, 0, 0));
+        var place = item.Modules.Single(m => m.Kind == ModuleKind.Location);
+        place.GooglePlaceId = "ChIJ_ceremony";
+        item.Modules.Add(new EventModule { Kind = ModuleKind.Location, Position = 6, LocationAddress = "Córdoba & <script>alert(1)</script>" });
+        item.Modules.Add(new EventModule { Kind = ModuleKind.Location, Position = 7, GooglePlaceId = "ChIJ_hidden", Enabled = false });
+        item.Modules.Add(new EventModule { Kind = ModuleKind.Location, Position = 8, LinkUrl = "https://maps.app.goo.gl/legacy" });
+        item.IsPublished = true;
+        await events.SaveAsync(item, item.LocalDate);
+        using var client = app.Browser();
+        var html = await client.GetStringAsync("/i/" + item.Slug);
+        Assert.Equal(2, Regex.Matches(html, "<iframe ").Count);
+        Assert.Contains("q=place_id%3AChIJ_ceremony", html);
+        Assert.Contains("destination_place_id=ChIJ_ceremony", html);
+        Assert.Contains("href=\"https://maps.app.goo.gl/legacy\"", html);
+        Assert.Contains("loading=\"lazy\"", html);
+        Assert.DoesNotContain("ChIJ_hidden", html);
+        Assert.DoesNotContain("<script>alert(1)</script>", html);
+        Assert.DoesNotContain("maps.googleapis.com/maps/api/js", html);
+        place.Enabled = false;
+        await events.SaveAsync(item, item.LocalDate);
+        Assert.DoesNotContain("ChIJ_ceremony", await client.GetStringAsync("/i/" + item.Slug));
     }
 
     [Fact]

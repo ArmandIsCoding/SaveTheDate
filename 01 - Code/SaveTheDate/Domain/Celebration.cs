@@ -48,6 +48,9 @@ public class EventModule
     [MaxLength(500)] public string Detail { get; set; } = "";
     [MaxLength(80)] public string ButtonText { get; set; } = "";
     [MaxLength(1000)] public string LinkUrl { get; set; } = "";
+    [MaxLength(500)] public string LocationAddress { get; set; } = "";
+    [MaxLength(500), RegularExpression(@"^[A-Za-z0-9_-]*$", ErrorMessage = "Volvé a elegir el lugar en Google Maps.")]
+    public string GooglePlaceId { get; set; } = "";
 }
 
 public class EventGallery

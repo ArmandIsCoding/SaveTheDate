@@ -1,0 +1,109 @@
+@implements IAsyncDisposable
+@inject GoogleMaps Maps
+@inject IJSRuntime JS
+
+<div class="location-editor">
+    <div class="location-editor-heading"><span class="module-icon"><Icon Name="pin" /></span><div><h3>El lugar donde nos encontramos</h3><p>Un punto en el mapa. Un montón de recuerdos por venir.</p></div></div>
+    @if (Maps.IsConfigured)
+    {
+        <span class="location-search-label" id="@labelId">Buscar un lugar en Google Maps</span>
+        <div @ref="searchHost" class="location-search" aria-labelledby="@labelId"></div>
+        @if (loading) { <p class="field-hint" role="status">Preparando el buscador de lugares…</p> }
+        @if (error is not null) { <p class="notice soft" role="status">@error</p> }
+        <p class="field-hint">Buscá por nombre o dirección y elegí una sugerencia para marcar el lugar.</p>
+    }
+    else
+    {
+        <p class="notice soft">La búsqueda de lugares todavía no está habilitada. Mientras tanto, podés escribir la dirección para que tus invitados sepan cómo llegar.</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Module.GooglePlaceId))
+    {
+        <div class="location-selection"><Icon Name="check" /><span>@(selectedLabel ?? "Tu lugar está marcado en el mapa")</span><button class="text-button" type="button" @onclick="ClearPlace">Quitar lugar</button></div>
+        <p class="field-hint">Escribí arriba el nombre del lugar y los detalles que quieras compartir.</p>
+    }
+    else
+    {
+        <label>Dirección del encuentro<input value="@Module.LocationAddress" @onchange="SetAddress" maxlength="500" placeholder="Calle, número, ciudad y país" /></label>
+        <p class="field-hint">Incluí la ciudad para que el mapa encuentre la dirección correcta.</p>
+    }
+    <LocationMap Module="Module" />
+    @if (GoogleMaps.DirectionsUrl(Module) is { } directions)
+    {
+        <a class="text-button location-check" href="@directions" target="_blank" rel="noopener noreferrer">Comprobar cómo llegar <Icon Name="arrow" /></a>
+    }
+    <label>Texto del botón<input @bind="Module.ButtonText" @bind:after="Changed" maxlength="80" placeholder="Cómo llegar" /></label>
+    @if (!GoogleMaps.HasLocation(Module))
+    {
+        <label>Enlace de ubicación (opcional)<input type="url" @bind="Module.LinkUrl" @bind:after="Changed" maxlength="1000" placeholder="https://maps.app.goo.gl/…" /></label>
+        <p class="field-hint">También podés pegar un enlace que hayas compartido desde Google Maps.</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public EventModule Module { get; set; } = default!;
+    [Parameter] public EventCallback OnChanged { get; set; }
+    readonly string labelId = "location-search-" + Guid.NewGuid().ToString("N");
+    ElementReference searchHost;
+    IJSObjectReference? script;
+    DotNetObjectReference<LocationEditor>? reference;
+    bool loading = true, disposed;
+    string? error, selectedLabel;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !Maps.IsConfigured) return;
+        try
+        {
+            script = await JS.InvokeAsync<IJSObjectReference>("import", "./js/google-maps.js");
+            if (disposed) { await script.DisposeAsync(); return; }
+            reference = DotNetObjectReference.Create(this);
+            await script.InvokeVoidAsync("mount", searchHost, Maps.BrowserApiKey, reference);
+        }
+        catch (JSException) { error = "No pudimos cargar el buscador. Podés escribir la dirección o volver a abrir este módulo para intentar de nuevo."; }
+        catch (JSDisconnectedException) { return; }
+        finally { loading = false; }
+        if (!disposed) StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task SelectPlace(string placeId, string label)
+    {
+        if (disposed) return;
+        var candidate = new EventModule { GooglePlaceId = placeId };
+        if (string.IsNullOrWhiteSpace(placeId) || !Validator.TryValidateObject(candidate, new ValidationContext(candidate), null, true))
+        { await SearchFailed(); return; }
+        Module.GooglePlaceId = placeId;
+        Module.LocationAddress = "";
+        // Google place descriptions are displayed transiently, never cached in SQLite.
+        selectedLabel = label;
+        error = null;
+        await Changed();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task SearchFailed()
+    {
+        if (!disposed) { error = "Google Maps no pudo buscar ese lugar. Podés intentar de nuevo o escribir la dirección."; StateHasChanged(); }
+        return Task.CompletedTask;
+    }
+
+    async Task ClearPlace()
+    {
+        Module.GooglePlaceId = "";
+        selectedLabel = null;
+        await Changed();
+    }
+    async Task SetAddress(ChangeEventArgs args) { Module.LocationAddress = args.Value?.ToString() ?? ""; await Changed(); }
+    Task Changed() => OnChanged.InvokeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        reference?.Dispose();
+        if (script is not null)
+        {
+            try { await script.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+}

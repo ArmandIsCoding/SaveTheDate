@@ -84,7 +84,9 @@ public class EventService(IDbContextFactory<AppDbContext> factory, ICurrentUser 
             Body = m.Body,
             Detail = m.Detail,
             ButtonText = m.ButtonText,
-            LinkUrl = m.LinkUrl
+            LinkUrl = m.LinkUrl,
+            LocationAddress = m.Kind == ModuleKind.Location ? m.LocationAddress.Trim() : "",
+            GooglePlaceId = m.Kind == ModuleKind.Location ? m.GooglePlaceId : ""
         }).ToList();
         db.Modules.AddRange(saved.Modules);
         try { await db.SaveChangesAsync(); }

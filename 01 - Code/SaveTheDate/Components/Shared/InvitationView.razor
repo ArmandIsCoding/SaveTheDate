@@ -17,8 +17,22 @@
         case ModuleKind.Rsvp:
             <section class="invitation-section rsvp-section" id="rsvp"><span class="floral-mark">♡</span><h2>@module.Title</h2><p>@(string.IsNullOrWhiteSpace(module.Body) ? "El mejor regalo es compartir este día con vos." : module.Body)</p>@if (Preview) { <div class="notice soft">El formulario de asistencia estará disponible cuando publiques tu invitación.</div> } else if (Response == "ok") { <div class="rsvp-success" role="status"><Icon Name="check" /><h3>¡Gracias por responder!</h3><p>Tu respuesta ya llegó a quienes organizan.</p></div> } else { @if (!string.IsNullOrEmpty(Error)) { <div class="notice error" role="alert">@Error</div> }<form method="post" action="/i/@Event.Slug/confirmar" class="rsvp-form" data-enhance="false"><AntiforgeryToken /><div class="honeypot" aria-hidden="true"><label>Dejar vacío<input name="website" tabindex="-1" autocomplete="off" /></label></div><div class="form-row"><label>Tu nombre<input name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nombre y apellido" /></label><label>Tu correo<input name="email" type="email" required maxlength="200" autocomplete="email" placeholder="vos@ejemplo.com" /></label></div><div class="form-row"><label>¿Vas a acompañarnos?<select name="attending"><option value="yes">¡Sí, ahí estaré!</option><option value="no">Esta vez no puedo</option></select></label><label>Personas, incluyéndote<input type="number" name="size" value="1" min="1" max="10" required /></label></div><label>Un mensaje para quienes organizan<textarea name="note" maxlength="500" rows="3" placeholder="Algo que quieras contarnos (opcional)"></textarea></label><small>Tu respuesta y tu correo solo estarán disponibles para quien organiza este evento.</small><button class="button primary" type="submit">Enviar mi respuesta <Icon Name="heart" /></button></form> }</section>
             break;
+        case ModuleKind.Location:
+            <section class="invitation-section content-section location-section">
+                <span class="invitation-module-icon"><Icon Name="pin" /></span>
+                <h2>@module.Title</h2><p class="preserve-lines">@module.Body</p>
+                <p class="location-date">@Event.LocalDate.ToString("dddd d 'de' MMMM · HH:mm") hs</p>
+                @if (!string.IsNullOrWhiteSpace(module.LocationAddress)) { <p class="location-address">@module.LocationAddress</p> }
+                @if (!string.IsNullOrWhiteSpace(module.Detail)) { <p class="preserve-lines module-detail">@module.Detail</p> }
+                <LocationMap Module="module" />
+                @if (GoogleMaps.ButtonUrl(module) is { } directions)
+                {
+                    <a class="button secondary" href="@directions" target="_blank" rel="noopener noreferrer">@(string.IsNullOrWhiteSpace(module.ButtonText) ? "Cómo llegar" : module.ButtonText) <Icon Name="arrow" /></a>
+                }
+            </section>
+            break;
         default:
-            <section class="invitation-section content-section @(module.Kind == ModuleKind.Location ? "location-section" : "")"><span class="invitation-module-icon"><Icon Name="@ModuleCatalog.Get(module.Kind).Icon" /></span><h2>@module.Title</h2><p class="preserve-lines">@module.Body</p>@if (module.Kind == ModuleKind.Location) { <p class="location-date">@Event.LocalDate.ToString("dddd d 'de' MMMM · HH:mm") hs</p> }@if (!string.IsNullOrWhiteSpace(module.Detail)) { <p class="preserve-lines module-detail">@module.Detail</p> }@if (!string.IsNullOrWhiteSpace(module.LinkUrl) && ModuleCatalog.SafeUrl(module.LinkUrl)) { <a class="button secondary" href="@module.LinkUrl" target="_blank" rel="noopener noreferrer">@(string.IsNullOrWhiteSpace(module.ButtonText) ? "Ver más" : module.ButtonText) <Icon Name="arrow" /></a> }</section>
+            <section class="invitation-section content-section"><span class="invitation-module-icon"><Icon Name="@ModuleCatalog.Get(module.Kind).Icon" /></span><h2>@module.Title</h2><p class="preserve-lines">@module.Body</p>@if (!string.IsNullOrWhiteSpace(module.Detail)) { <p class="preserve-lines module-detail">@module.Detail</p> }@if (!string.IsNullOrWhiteSpace(module.LinkUrl) && ModuleCatalog.SafeUrl(module.LinkUrl)) { <a class="button secondary" href="@module.LinkUrl" target="_blank" rel="noopener noreferrer">@(string.IsNullOrWhiteSpace(module.ButtonText) ? "Ver más" : module.ButtonText) <Icon Name="arrow" /></a> }</section>
             break;
     }
 }

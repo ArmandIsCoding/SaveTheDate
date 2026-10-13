@@ -89,6 +89,41 @@ public sealed class EventAndGalleryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Independent_locations_survive_edits_and_can_be_cleared_without_changing_legacy_links()
+    {
+        var item = await Create();
+        var ceremony = item.Modules.Single(m => m.Kind == ModuleKind.Location);
+        ceremony.GooglePlaceId = "ChIJ_ceremony-123";
+        ceremony.LinkUrl = "https://maps.app.goo.gl/example";
+        var party = ModuleCatalog.Create(ModuleKind.Location, item.Modules.Count);
+        party.LocationAddress = "  Av. Colón 100, Córdoba, Argentina  ";
+        item.Modules.Add(party);
+        await events.SaveAsync(item, localDate);
+        var read = (await events.GetAsync(item.Id))!;
+        var locations = read.Modules.Where(m => m.Kind == ModuleKind.Location).OrderBy(m => m.Position).ToList();
+        Assert.Equal("ChIJ_ceremony-123", locations[0].GooglePlaceId);
+        Assert.Equal("Av. Colón 100, Córdoba, Argentina", locations[1].LocationAddress);
+        Assert.Empty(locations[1].GooglePlaceId);
+        locations[0].GooglePlaceId = "";
+        await events.SaveAsync(read, localDate);
+        read = (await events.GetAsync(item.Id))!;
+        Assert.Empty(read.Modules.First(m => m.Kind == ModuleKind.Location).GooglePlaceId);
+        Assert.Equal("https://maps.app.goo.gl/example", GoogleMaps.ButtonUrl(read.Modules.First(m => m.Kind == ModuleKind.Location)));
+        Assert.Equal(party.LocationAddress.Trim(), read.Modules.Last(m => m.Kind == ModuleKind.Location).LocationAddress);
+    }
+
+    [Theory]
+    [InlineData("bad&id=another")]
+    [InlineData("https://example.com")]
+    [InlineData("<iframe>")]
+    public async Task Invalid_place_ids_cannot_be_saved(string placeId)
+    {
+        var item = await Create();
+        item.Modules.Single(m => m.Kind == ModuleKind.Location).GooglePlaceId = placeId;
+        await Assert.ThrowsAsync<ValidationException>(() => events.SaveAsync(item, localDate));
+    }
+
+    [Fact]
     public async Task Stale_editor_cannot_overwrite_a_newer_save()
     {
         var item = await Create(); var old = (await events.GetAsync(item.Id))!;
