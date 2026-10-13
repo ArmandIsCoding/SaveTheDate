@@ -39,7 +39,7 @@ Las páginas `/administracion` usan SSR y la política `SuperAdministration`. `S
 
 `AdminProvisioning` asigna o revoca el rol mediante un comando local sobre cuentas existentes; no hay asignación desde registro o una API. El modo comando sale antes de migrar, sembrar demos o iniciar el servidor. Las tablas de Identity ya existen, por lo que no se agrega una migración.
 
-Las consultas usan proyecciones, recuentos en SQLite, paginación y `AsNoTracking`. No se exponen hashes, tokens ni marcas de seguridad. Los correos y mensajes de invitados están disponibles únicamente dentro del detalle autorizado. Las páginas y `/administracion/media/{id}` envían `Cache-Control: private, no-store` y `X-Robots-Tag: noindex, nofollow`. Esa ruta de imágenes valida el permiso incluso cuando se abre directamente y no cambia los criterios de la ruta pública `/media`.
+Las consultas usan proyecciones, recuentos en SQLite, paginación y `AsNoTracking`. No se exponen hashes, tokens ni marcas de seguridad. Los correos y mensajes de invitados están disponibles únicamente dentro del detalle autorizado. Las páginas y `/administracion/media/{id}` envían `Cache-Control: private, no-store, no-transform` y `X-Robots-Tag: noindex, nofollow`. Esa ruta de imágenes valida el permiso incluso cuando se abre directamente y no cambia los criterios de la ruta pública `/media`.
 
 El panel es de consulta. La autorización de escritura por propietario de los servicios normales permanece vigente.
 

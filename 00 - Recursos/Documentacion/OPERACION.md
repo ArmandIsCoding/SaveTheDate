@@ -78,3 +78,12 @@ La política consulta el rol y la marca de seguridad actuales de la base en cada
 - El tamaño SQLite incluye los archivos WAL/SHM si existen. El cálculo es informativo y puede variar durante la actividad.
 - Usuarios y eventos se paginan de a 20, igual que las respuestas de cada evento. El panel no inventa fecha de registro ni última conexión porque la base actual no guarda esos datos.
 - No hay backups automáticos ni verificación de restauración desde este panel. Detener la aplicación y respaldar SQLite, uploads y las claves persistentes de Data Protection con el procedimiento de la instalación.
+
+
+### Correos visibles detrás de Cloudflare
+
+Las respuestas de `/administracion` envían `Cache-Control: private, no-store, no-transform`. Cloudflare respeta `no-transform` y no aplica Email Address Obfuscation a esas respuestas. Así los correos siguen visibles y seleccionables al navegar entre páginas con Blazor, sin depender de que se vuelva a ejecutar el script de decodificación del proxy. La cabecera se establece al enviar la respuesta para que antiforgery no la sobrescriba.
+
+Si una versión anterior muestra `[email protected]` o abre `/cdn-cgi/l/email-protection`, publicar la versión corregida y recargar completamente el panel. No requiere cambiar roles, migrar SQLite ni desactivar globalmente la función de Cloudflare. El acceso de superadmin y `private, no-store` continúan siendo obligatorios.
+
+Referencia: [Cloudflare · Email Address Obfuscation](https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/#troubleshoot-email-obfuscation).

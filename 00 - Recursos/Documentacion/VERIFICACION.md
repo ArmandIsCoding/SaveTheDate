@@ -31,6 +31,10 @@ Fecha de actualización: 13 de octubre de 2026. Entorno local: macOS ARM64, SDK 
 
 Compilación Release y generación del paquete con `dotnet publish` correctas. Base de datos y archivos privados excluidos de publicación. Consulta de paquetes NuGet del 12/10/2026: sin vulnerabilidades reportadas por las fuentes consultadas ese día; esta actualización no cambia dependencias.
 
+### Ajuste de correos detrás de Cloudflare
+
+El 13/10/2026 se reprodujo en la web publicada el reemplazo de direcciones por enlaces `[email protected]`. Se agregó `no-transform` a las respuestas administrativas, conservando `private, no-store` y la autorización. Se ejecutaron las **6 pruebas dirigidas** de superadministración y portada: todas correctas. Verifican la nueva cabecera en las cuatro páginas administrativas y su ausencia en la portada pública. La comprobación final a través de Cloudflare requiere republicar esta versión en IIS.
+
 ## Navegador
 
 - Pantalla de ingreso y entrada al demo con cookie real.

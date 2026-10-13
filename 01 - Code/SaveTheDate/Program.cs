@@ -84,7 +84,9 @@ app.Use(async (context, next) =>
     {
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers.CacheControl = "private, no-store";
+            // Preserve Blazor's HTML: Cloudflare email obfuscation can leave
+            // undecoded links after enhanced navigation in the private portal.
+            context.Response.Headers.CacheControl = "private, no-store, no-transform";
             context.Response.Headers.Pragma = "no-cache";
             context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
             return Task.CompletedTask;

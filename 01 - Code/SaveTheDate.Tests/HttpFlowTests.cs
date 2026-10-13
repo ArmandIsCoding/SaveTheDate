@@ -42,6 +42,7 @@ public sealed class HttpFlowTests : IClassFixture<TestApplication>
         using var client = app.Browser();
         var landing = await client.GetAsync("/");
         Assert.Equal(HttpStatusCode.OK, landing.StatusCode);
+        Assert.False(landing.Headers.CacheControl?.NoTransform ?? false);
         var html = await landing.Content.ReadAsStringAsync();
         Assert.Contains("href=\"/registro\"", html);
         Assert.Contains("href=\"/ingresar\"", html);

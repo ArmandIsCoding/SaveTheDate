@@ -89,6 +89,7 @@ public sealed class AdminTests : IDisposable
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.True(response.Headers.CacheControl?.NoStore);
             Assert.True(response.Headers.CacheControl?.Private);
+            Assert.True(response.Headers.CacheControl?.NoTransform);
             Assert.Contains("noindex", response.Headers.GetValues("X-Robots-Tag").Single());
         }
         Assert.Contains("href=\"/administracion\"", await browser.GetStringAsync("/eventos"));
