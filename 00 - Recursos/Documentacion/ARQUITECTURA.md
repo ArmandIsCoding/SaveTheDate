@@ -29,7 +29,9 @@ Navegador ── HTTP/SSR ── páginas públicas y autenticación
 
 Identity administra hashes de contraseñas y cookies. Registro/login/logout usan solicitudes HTTP normales con antiforgery; no intentan escribir cookies dentro de una conexión SignalR. El portal utiliza un AuthenticationStateProvider que revalida la marca de seguridad de Identity cada 20 minutos.
 
-`ICurrentUser` obtiene el identificador de la sesión del servidor. Los servicios filtran por OwnerId tanto al leer como al modificar; ocultar botones no es una barrera de seguridad. Las consultas públicas filtran por publicación y baja lógica y nunca incluyen respuestas de invitados.
+`ICurrentUser` obtiene el identificador de la sesión del servidor. `EventService`, `GalleryService` y `/media` permiten acceso al creador o a un colaborador del evento, consultando la relación en cada operación. Ocultar botones no es una barrera de seguridad. Las consultas públicas filtran por publicación y baja lógica y nunca incluyen respuestas de invitados ni colaboradores.
+
+`EventCollaborator` relaciona evento y usuario registrado mediante una clave compuesta única y claves foráneas. `CollaboratorService` exige ser el creador para listar, agregar o revocar colaboradores; normaliza el correo con el normalizador de Identity. Agregar concede acceso inmediato, sin correo ni aceptación pendiente. El creador conserva la propiedad y la exclusividad sobre la papelera; los colaboradores pueden editar, publicar y consultar respuestas. Los eventos eliminados no aparecen para colaboradores. Restaurarlos conserva los accesos. Revocar bloquea las siguientes consultas, guardados y operaciones de galería; no borra cambios anteriores ni retira información ya recibida por un navegador. `Version` impide sobrescribir una edición más reciente de otro usuario. No hay sincronización de ediciones en vivo: hay que recargar para ver cambios ajenos.
 
 La cuenta demo no tiene contraseña y se crea únicamente en Development. La ruta de acceso demo se registra únicamente en ese entorno.
 
@@ -41,7 +43,7 @@ Las páginas `/administracion` usan SSR y la política `SuperAdministration`. `S
 
 Las consultas usan proyecciones, recuentos en SQLite, paginación y `AsNoTracking`. No se exponen hashes, tokens ni marcas de seguridad. Los correos y mensajes de invitados están disponibles únicamente dentro del detalle autorizado. Las páginas y `/administracion/media/{id}` envían `Cache-Control: private, no-store, no-transform` y `X-Robots-Tag: noindex, nofollow`. Esa ruta de imágenes valida el permiso incluso cuando se abre directamente y no cambia los criterios de la ruta pública `/media`.
 
-El panel es de consulta. La autorización de escritura por propietario de los servicios normales permanece vigente.
+El panel es de consulta. Ser superadministrador no concede edición en los servicios normales: se requiere ser creador o colaborador del evento.
 
 ## Imágenes
 

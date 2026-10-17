@@ -27,6 +27,7 @@ La portada pública está en `/` y el ingreso en `/ingresar`. En Development se 
 - Superadministración privada en `/administracion`: métricas, usuarios y sus eventos, filtros, detalle de módulos/galerías/asistencia y almacenamiento. Permiso asignado explícitamente desde el servidor.
 - Registro, ingreso, cierre de sesión y cookies de Identity; bloqueo temporal por intentos fallidos.
 - Alta, consulta y edición de eventos propios, búsqueda, filtros, papelera y restauración.
+- Colaboradores por evento: el creador agrega cuentas registradas por correo desde «Colaboradores». El acceso es inmediato en «Mis eventos», sin envío de correo. Pueden editar, publicar, administrar fotos y consultar respuestas; solo el creador administra accesos y la papelera.
 - Fecha/hora local, zona horaria explícita, nombre, tipo, lugar y enlace personalizable.
 - Publicación y vuelta a borrador; invitación pública en `/i/{enlace}` y vista previa privada.
 - Editor de módulos con activación, configuración y orden mediante controles accesibles.

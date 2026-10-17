@@ -89,6 +89,12 @@ Si una versión anterior muestra `[email protected]` o abre `/cdn-cgi/l/email-pr
 
 Referencia: [Cloudflare · Email Address Obfuscation](https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/#troubleshoot-email-obfuscation).
 
+## Actualizar para compartir eventos
+
+La migración `20261016124750_AddEventCollaborators` crea la tabla de colaboradores sin alterar propietarios, eventos ni fotos existentes. Antes de publicar, detener el Application Pool y respaldar `App_Data`; conservar la base, los uploads y la configuración del servidor durante la publicación. Publicar la aplicación, arrancar con `Database__ApplyMigrations=true`, comprobar el inicio correcto y volver esa opción a `false`. No ejecutar la aplicación anterior durante la actualización.
+
+Para usarlo: abrir un evento propio → **Colaboradores** → ingresar el correo de una cuenta registrada → **Agregar colaborador**. Esa persona verá el evento al recargar **Mis eventos**, con la marca «Compartido con vos». No se envía un correo ni se necesita aceptar una invitación. El creador puede quitar el acceso desde la misma sección. Ambos pueden editar y publicar; únicamente el creador administra accesos y la papelera. Si guardan versiones distintas del mismo evento, la segunda persona recibirá un aviso para recargar antes de guardar.
+
 ## Activar Google Maps
 
 Cada módulo «Lugar y horario» permite buscar y seleccionar un lugar, mostrarlo en un mapa y abrir indicaciones en Google Maps. Se pueden agregar módulos independientes para ceremonia y fiesta. Los enlaces anteriores siguen funcionando. Sin clave, se puede ingresar la dirección y usar «Cómo llegar», pero el buscador y los mapas quedan pendientes de activación.
