@@ -50,6 +50,7 @@ var connection = builder.Configuration.GetConnectionString("DefaultConnection") 
 builder.Services.AddDbContextFactory<AppDbContext>(options => options.UseSqlite(connection));
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<CollaboratorService>();
 builder.Services.AddScoped<GalleryService>();
 builder.Services.AddScoped<InvitationService>();
 builder.Services.Configure<GoogleMapsOptions>(builder.Configuration.GetSection("GoogleMaps"));
@@ -122,7 +123,7 @@ app.MapGet("/media/{id:guid}", async (Guid id, HttpContext context, IDbContextFa
 {
     await using var db = await factory.CreateDbContextAsync();
     var owner = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    var photo = await db.Images.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && db.Events.Any(e => e.Gallery.Id == x.EventGalleryId && !e.IsDeleted && (e.IsPublished || e.OwnerId == owner)));
+    var photo = await db.Images.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && db.Events.Any(e => e.Gallery.Id == x.EventGalleryId && !e.IsDeleted && (e.IsPublished || e.OwnerId == owner || e.Collaborators.Any(c => c.UserId == owner))));
     if (photo is null || !File.Exists(storage.GetPath(photo.StorageName))) return Results.NotFound();
     context.Response.Headers.CacheControl = "private, no-store";
     return Results.File(storage.GetPath(photo.StorageName), "image/webp");

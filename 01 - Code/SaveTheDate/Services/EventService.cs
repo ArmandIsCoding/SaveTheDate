@@ -15,14 +15,14 @@ public class EventService(IDbContextFactory<AppDbContext> factory, ICurrentUser 
         var owner = await currentUser.GetIdAsync();
         await using var db = await factory.CreateDbContextAsync();
         return await db.Events.AsNoTracking().Include(x => x.Responses)
-            .Where(x => x.OwnerId == owner && x.IsDeleted == deleted).OrderBy(x => x.StartsAtUtc).ToListAsync();
+            .Where(x => x.IsDeleted == deleted && (x.OwnerId == owner || (!deleted && x.Collaborators.Any(c => c.UserId == owner)))).OrderBy(x => x.StartsAtUtc).ToListAsync();
     }
 
     public async Task<Celebration?> GetAsync(Guid id)
     {
         var owner = await currentUser.GetIdAsync();
         await using var db = await factory.CreateDbContextAsync();
-        return await FullQuery(db).SingleOrDefaultAsync(x => x.Id == id && x.OwnerId == owner && !x.IsDeleted);
+        return await FullQuery(db).SingleOrDefaultAsync(x => x.Id == id && (x.OwnerId == owner || x.Collaborators.Any(c => c.UserId == owner)) && !x.IsDeleted);
     }
 
     public static IQueryable<Celebration> FullQuery(AppDbContext db) => db.Events.AsNoTracking().AsSplitQuery()
@@ -67,9 +67,9 @@ public class EventService(IDbContextFactory<AppDbContext> factory, ICurrentUser 
             if (!Enum.IsDefined(module.Kind) || !ModuleCatalog.SafeUrl(module.LinkUrl)) throw new ValidationException("Los enlaces deben comenzar con https://.");
         }
         await using var db = await factory.CreateDbContextAsync();
-        var saved = await db.Events.Include(x => x.Modules).SingleOrDefaultAsync(x => x.Id == input.Id && x.OwnerId == owner && !x.IsDeleted)
+        var saved = await db.Events.Include(x => x.Modules).SingleOrDefaultAsync(x => x.Id == input.Id && (x.OwnerId == owner || x.Collaborators.Any(c => c.UserId == owner)) && !x.IsDeleted)
             ?? throw new UnauthorizedAccessException();
-        if (saved.Version != input.Version) throw new ValidationException("El evento cambió en otra ventana. Recargá antes de guardar.");
+        if (saved.Version != input.Version) throw new ValidationException("El evento cambió en otra ventana o alguien más guardó cambios. Recargá antes de guardar.");
         if (await db.Events.AnyAsync(x => x.Slug == input.Slug && x.Id != input.Id)) throw new ValidationException("Ese enlace ya está en uso. Elegí otro.");
         saved.Title = input.Title.Trim(); saved.Slug = input.Slug; saved.Kind = input.Kind; saved.Venue = input.Venue.Trim();
         saved.StartsAtUtc = ToUtc(localDate, input.TimeZoneId); saved.TimeZoneId = input.TimeZoneId; saved.Palette = input.Palette;

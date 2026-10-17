@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,58 @@ public sealed class HttpFlowTests : IClassFixture<TestApplication>
     static string Token(string html) => WebUtility.HtmlDecode(Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
     static async Task<HttpResponseMessage> Post(HttpClient client, string path, string token, params (string Key, string Value)[] values) =>
         await client.PostAsync(path, new FormUrlEncodedContent(values.Append(("__RequestVerificationToken", token)).ToDictionary(x => x.Item1, x => x.Item2)));
+
+    [Fact]
+    public async Task Shared_event_preview_and_draft_photos_require_current_collaborator_access()
+    {
+        using var client = app.Browser();
+        using var stranger = app.Browser();
+        var email = Guid.NewGuid().ToString("N") + "@example.test";
+        var registration = await client.GetStringAsync("/registro");
+        var registered = await Post(client, "/cuenta/registrar", Token(registration), ("name", "Colaboradora"), ("email", email), ("password", "a-long-test-password"), ("confirm", "a-long-test-password"));
+        Assert.Equal(HttpStatusCode.Redirect, registered.StatusCode);
+        using var scope = app.Services.CreateScope();
+        var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        var owner = new TestUser(Guid.NewGuid().ToString());
+        string collaboratorId;
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            collaboratorId = await db.Users.Where(u => u.Email == email).Select(u => u.Id).SingleAsync();
+            db.Users.Add(new ApplicationUser { Id = owner.Id, UserName = owner.Id });
+            await db.SaveChangesAsync();
+        }
+        var events = new EventService(factory, owner);
+        var item = await events.CreateAsync("Evento compartido HTTP", EventKind.Wedding, new DateTime(2027, 3, 4, 18, 0, 0));
+        var gallery = new GalleryService(factory, owner, scope.ServiceProvider.GetRequiredService<IImageStorage>());
+        using var bitmap = new SKBitmap(10, 10);
+        bitmap.Erase(SKColors.Green);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = new MemoryStream(data.ToArray());
+        await gallery.AddAsync(item.Id, stream, "Foto compartida");
+        var photo = (await events.GetAsync(item.Id))!.Gallery.Images.Single();
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/media/{photo.Id}")).StatusCode);
+        var collaborators = new CollaboratorService(factory, owner, new UpperInvariantLookupNormalizer());
+        await collaborators.AddAsync(item.Id, email);
+        var dashboard = await client.GetStringAsync("/eventos");
+        Assert.Contains(item.Title, dashboard);
+        Assert.Contains("Compartido con vos", dashboard);
+        var editor = await client.GetStringAsync($"/eventos/{item.Id}");
+        Assert.Contains(item.Title, editor);
+        Assert.DoesNotContain("> Colaboradores</button>", editor);
+        var preview = await client.GetStringAsync($"/eventos/{item.Id}/vista-previa");
+        Assert.Contains($"/media/{photo.Id}", preview);
+        var media = await client.GetAsync($"/media/{photo.Id}");
+        Assert.Equal(HttpStatusCode.OK, media.StatusCode);
+        Assert.True(media.Headers.CacheControl?.NoStore);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync($"/media/{photo.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync($"/i/{item.Slug}")).StatusCode);
+        await collaborators.RemoveAsync(item.Id, collaboratorId);
+        Assert.DoesNotContain(item.Title, await client.GetStringAsync("/eventos"));
+        Assert.Contains("No encontramos este evento", await client.GetStringAsync($"/eventos/{item.Id}"));
+        Assert.DoesNotContain($"/media/{photo.Id}", await client.GetStringAsync($"/eventos/{item.Id}/vista-previa"));
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/media/{photo.Id}")).StatusCode);
+    }
 
     [Fact]
     public async Task Visitors_can_discover_the_product_before_signing_in()

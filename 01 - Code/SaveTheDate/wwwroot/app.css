@@ -1193,6 +1193,7 @@ textarea {
   color: #708861;
 }
 .editor-tabs {
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--line);
   margin-bottom: 30px;
   gap: 25px;

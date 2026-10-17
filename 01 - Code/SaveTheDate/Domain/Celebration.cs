@@ -31,9 +31,18 @@ public class Celebration
     public List<EventModule> Modules { get; set; } = [];
     public EventGallery Gallery { get; set; } = new();
     public List<GuestResponse> Responses { get; set; } = [];
+    public List<EventCollaborator> Collaborators { get; set; } = [];
 
     public DateTime LocalDate => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(StartsAtUtc, DateTimeKind.Utc), TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId));
     public string CoverUrl => CoverImageId.HasValue ? $"/media/{CoverImageId}" : $"/images/{Artwork}.jpg";
+}
+
+public class EventCollaborator
+{
+    public Guid CelebrationId { get; set; }
+    [MaxLength(450)] public string UserId { get; set; } = "";
+    public ApplicationUser User { get; set; } = default!;
+    public DateTime AddedAtUtc { get; set; } = DateTime.UtcNow;
 }
 
 public class EventModule

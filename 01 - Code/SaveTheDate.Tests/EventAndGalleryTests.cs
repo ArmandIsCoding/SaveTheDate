@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SaveTheDate.Domain;
 using SaveTheDate.Services;
@@ -41,6 +42,69 @@ public sealed class EventAndGalleryTests : IAsyncLifetime
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         return new MemoryStream(encoded.ToArray());
+    }
+
+    [Fact]
+    public async Task Collaborator_can_edit_but_cannot_manage_access_or_delete_and_revocation_blocks_operations()
+    {
+        await using (var db = factory.CreateDbContext())
+        {
+            var user = await db.Users.SingleAsync(u => u.Id == "other");
+            user.Email = "mili@example.test"; user.NormalizedEmail = "MILI@EXAMPLE.TEST";
+            await db.SaveChangesAsync();
+        }
+        var collaborators = new CollaboratorService(factory, current, new UpperInvariantLookupNormalizer());
+        var shared = await Create(); var privateEvent = await Create();
+        await Assert.ThrowsAsync<ValidationException>(() => collaborators.AddAsync(shared.Id, "unknown@example.test"));
+        await Assert.ThrowsAsync<ValidationException>(() => collaborators.AddAsync(shared.Id, "not-an-email"));
+        await collaborators.AddAsync(shared.Id, "  Mili@Example.Test  ");
+        await Assert.ThrowsAsync<ValidationException>(() => collaborators.AddAsync(shared.Id, "mili@example.test"));
+        Assert.Single(await collaborators.ListAsync(shared.Id));
+
+        current.Id = "other";
+        Assert.Equal(shared.Id, Assert.Single(await events.ListAsync()).Id);
+        Assert.Null(await events.GetAsync(privateEvent.Id));
+        var edit = (await events.GetAsync(shared.Id))!;
+        edit.Title = "Nuestra boda compartida";
+        // Client input must never transfer ownership or grant access.
+        edit.OwnerId = "other";
+        edit.IsPublished = true;
+        await events.SaveAsync(edit, localDate);
+        Assert.Equal("owner", (await events.GetAsync(shared.Id))!.OwnerId);
+        using (var photo = Photo()) await gallery.AddAsync(shared.Id, photo, "Juntos");
+        var image = (await events.GetAsync(shared.Id))!.Gallery.Images.Single();
+        await gallery.UpdateAsync(shared.Id, image.Id, "Nuestra foto");
+        await gallery.SetCoverAsync(shared.Id, image.Id);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => events.SetDeletedAsync(shared.Id, true));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => collaborators.ListAsync(shared.Id));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => collaborators.AddAsync(shared.Id, "someone@example.test"));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => collaborators.RemoveAsync(shared.Id, "other"));
+
+        current.Id = "owner";
+        await Assert.ThrowsAsync<ValidationException>(() => events.SaveAsync(shared, localDate));
+        Assert.Equal("Nuestra boda compartida", (await events.GetAsync(shared.Id))!.Title);
+        await events.SetDeletedAsync(shared.Id, true);
+        current.Id = "other";
+        Assert.Empty(await events.ListAsync());
+        Assert.Empty(await events.ListAsync(true));
+        Assert.Null(await events.GetAsync(shared.Id));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gallery.UpdateAsync(shared.Id, image.Id, "No permitido"));
+        current.Id = "owner";
+        await events.SetDeletedAsync(shared.Id, false);
+        current.Id = "other";
+        edit = (await events.GetAsync(shared.Id))!;
+        Assert.False(edit.IsPublished);
+        current.Id = "owner";
+        await collaborators.RemoveAsync(shared.Id, "other");
+        Assert.Empty(await collaborators.ListAsync(shared.Id));
+        current.Id = "other";
+        Assert.Empty(await events.ListAsync());
+        Assert.Null(await events.GetAsync(shared.Id));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => events.SaveAsync(edit, localDate));
+        using (var photo = Photo()) await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gallery.AddAsync(shared.Id, photo, "No permitido"));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gallery.UpdateAsync(shared.Id, image.Id, "No permitido"));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gallery.SetCoverAsync(shared.Id, image.Id));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => gallery.DeleteAsync(shared.Id, image.Id));
     }
 
     [Fact]

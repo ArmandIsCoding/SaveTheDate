@@ -287,6 +287,25 @@ namespace SaveTheDate.Data.Migrations
                     b.ToTable("Events");
                 });
 
+            modelBuilder.Entity("SaveTheDate.Domain.EventCollaborator", b =>
+                {
+                    b.Property<Guid>("CelebrationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AddedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CelebrationId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Collaborators");
+                });
+
             modelBuilder.Entity("SaveTheDate.Domain.EventGallery", b =>
                 {
                     b.Property<Guid>("Id")
@@ -497,6 +516,23 @@ namespace SaveTheDate.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SaveTheDate.Domain.EventCollaborator", b =>
+                {
+                    b.HasOne("SaveTheDate.Domain.Celebration", null)
+                        .WithMany("Collaborators")
+                        .HasForeignKey("CelebrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SaveTheDate.Domain.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SaveTheDate.Domain.EventGallery", b =>
                 {
                     b.HasOne("SaveTheDate.Domain.Celebration", null)
@@ -535,6 +571,8 @@ namespace SaveTheDate.Data.Migrations
 
             modelBuilder.Entity("SaveTheDate.Domain.Celebration", b =>
                 {
+                    b.Navigation("Collaborators");
+
                     b.Navigation("Gallery")
                         .IsRequired();
 

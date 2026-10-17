@@ -67,17 +67,17 @@ public class LocalImageStorage(IWebHostEnvironment environment) : IImageStorage
 
 public class GalleryService(IDbContextFactory<AppDbContext> factory, ICurrentUser currentUser, IImageStorage storage)
 {
-    private async Task<Celebration> OwnedAsync(AppDbContext db, Guid eventId)
+    private async Task<Celebration> EditableAsync(AppDbContext db, Guid eventId)
     {
         var owner = await currentUser.GetIdAsync();
         return await db.Events.Include(x => x.Gallery).ThenInclude(x => x.Images)
-            .SingleOrDefaultAsync(x => x.Id == eventId && x.OwnerId == owner && !x.IsDeleted) ?? throw new UnauthorizedAccessException();
+            .SingleOrDefaultAsync(x => x.Id == eventId && (x.OwnerId == owner || x.Collaborators.Any(c => c.UserId == owner)) && !x.IsDeleted) ?? throw new UnauthorizedAccessException();
     }
 
     public async Task AddAsync(Guid eventId, Stream stream, string caption)
     {
         await using var db = await factory.CreateDbContextAsync();
-        var item = await OwnedAsync(db, eventId);
+        var item = await EditableAsync(db, eventId);
         if (item.Gallery.Images.Count >= 100) throw new ValidationException("Cada galería admite hasta 100 imágenes.");
         var name = await storage.SaveAsync(stream);
         try
@@ -92,7 +92,7 @@ public class GalleryService(IDbContextFactory<AppDbContext> factory, ICurrentUse
     {
         if (caption.Length > 180) throw new ValidationException("El texto puede tener hasta 180 caracteres.");
         await using var db = await factory.CreateDbContextAsync();
-        var item = await OwnedAsync(db, eventId);
+        var item = await EditableAsync(db, eventId);
         var images = item.Gallery.Images.OrderBy(x => x.Position).ThenBy(x => x.CreatedAtUtc).ToList();
         var photo = images.SingleOrDefault(x => x.Id == imageId) ?? throw new UnauthorizedAccessException();
         photo.Caption = caption;
@@ -105,7 +105,7 @@ public class GalleryService(IDbContextFactory<AppDbContext> factory, ICurrentUse
     public async Task SetCoverAsync(Guid eventId, Guid imageId)
     {
         await using var db = await factory.CreateDbContextAsync();
-        var item = await OwnedAsync(db, eventId);
+        var item = await EditableAsync(db, eventId);
         if (!item.Gallery.Images.Any(x => x.Id == imageId)) throw new UnauthorizedAccessException();
         item.CoverImageId = imageId;
         await db.SaveChangesAsync();
@@ -114,7 +114,7 @@ public class GalleryService(IDbContextFactory<AppDbContext> factory, ICurrentUse
     public async Task DeleteAsync(Guid eventId, Guid imageId)
     {
         await using var db = await factory.CreateDbContextAsync();
-        var item = await OwnedAsync(db, eventId);
+        var item = await EditableAsync(db, eventId);
         var photo = item.Gallery.Images.SingleOrDefault(x => x.Id == imageId) ?? throw new UnauthorizedAccessException();
         if (item.CoverImageId == imageId) item.CoverImageId = null;
         db.Images.Remove(photo);

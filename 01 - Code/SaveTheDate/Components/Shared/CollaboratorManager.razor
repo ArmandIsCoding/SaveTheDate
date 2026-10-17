@@ -1,0 +1,70 @@
+@inject CollaboratorService Collaborators
+@inject ILogger<CollaboratorManager> Logger
+
+<section class="panel">
+    <h2>Una historia que se prepara entre dos</h2>
+    <p>Agregá a alguien que ya tenga una cuenta para organizar este evento juntos.</p>
+    <p>Podrá editar los detalles, los módulos y las fotos, publicar la invitación y consultar las respuestas. Solo vos podés administrar colaboradores y mover el evento a la papelera.</p>
+    @if (message is not null) { <div class="notice @(failed ? "error" : "success")" role="status">@message</div> }
+    <EditForm Model="invite" OnValidSubmit="Add" FormName="add-collaborator">
+        <DataAnnotationsValidator />
+        <label>Correo de la persona<InputText type="email" @bind-Value="invite.Email" maxlength="256" placeholder="nombre@ejemplo.com" /></label>
+        <ValidationMessage For="() => invite.Email" />
+        <p class="field-hint">Al agregarla, tendrá acceso inmediato desde «Mis eventos». No se envía un correo.</p>
+        <button type="submit" class="button primary" disabled="@busy"><Icon Name="users" /> Agregar colaborador</button>
+    </EditForm>
+    @if (rows is not null)
+    {
+        <h3>Personas con acceso de edición</h3>
+        @if (rows.Count == 0) { <p>Todavía no agregaste colaboradores.</p> }
+        else
+        {
+            <div class="table-scroll"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Acceso</th></tr></thead><tbody>
+            @foreach (var person in rows)
+            {
+                <tr @key="person.UserId"><td>@person.Name</td><td>@person.Email</td><td><button type="button" class="text-button danger" disabled="@busy" aria-label="Quitar acceso a @person.Email" @onclick="() => Remove(person)">Quitar acceso</button></td></tr>
+            }
+            </tbody></table></div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter] public Guid EventId { get; set; }
+    List<CollaboratorRow>? rows;
+    InviteModel invite = new();
+    bool busy, failed;
+    string? message;
+    protected override async Task OnParametersSetAsync() => await Run(async () => rows = await Collaborators.ListAsync(EventId));
+    async Task Add() => await Run(async () =>
+    {
+        await Collaborators.AddAsync(EventId, invite.Email);
+        invite = new();
+        rows = await Collaborators.ListAsync(EventId);
+        message = "Listo. El evento ya aparece en su espacio y pueden editarlo juntos.";
+    });
+    async Task Remove(CollaboratorRow person) => await Run(async () =>
+    {
+        await Collaborators.RemoveAsync(EventId, person.UserId);
+        rows = await Collaborators.ListAsync(EventId);
+        message = "Acceso quitado. Los cambios que hizo en el evento se conservan.";
+    });
+    async Task Run(Func<Task> action)
+    {
+        if (busy) return;
+        busy = true; message = null; failed = false;
+        try { await action(); }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Managing collaborators failed");
+            failed = true;
+            message = ex is ValidationException ? ex.Message : "No pudimos completar la operación. Revisá tu acceso al evento y volvé a intentar.";
+        }
+        finally { busy = false; }
+    }
+    class InviteModel
+    {
+        [Required(ErrorMessage = "Ingresá el correo de la persona."), EmailAddress(ErrorMessage = "Ingresá un correo válido."), MaxLength(256)]
+        public string Email { get; set; } = "";
+    }
+}

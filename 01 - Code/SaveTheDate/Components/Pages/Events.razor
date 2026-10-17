@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject EventService EventsService
+@inject ICurrentUser CurrentUser
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider Authentication
 @inject ILogger<Events> Logger
@@ -14,12 +15,12 @@
     @if (items is null) { <div class="loading-state"><span class="spinner"></span> Preparando tus momentos…</div> }
     else
     {
-        <section class="stats-grid" aria-label="Resumen de eventos"><div class="stat"><span class="stat-icon peach"><Icon Name="calendar" /></span><div><span class="stat-label">Eventos creados</span><strong>@items.Count</strong></div><small>Historias por compartir</small></div><div class="stat"><span class="stat-icon sage"><Icon Name="globe" /></span><div><span class="stat-label">Invitaciones publicadas</span><strong>@items.Count(x => x.IsPublished)</strong></div><small>Listas para encontrarse</small></div><div class="stat"><span class="stat-icon lavender"><Icon Name="users" /></span><div><span class="stat-label">Asistentes confirmados</span><strong>@items.SelectMany(x => x.Responses).Where(x => x.Attending).Sum(x => x.PartySize)</strong></div><small>Personas para celebrar</small></div></section>
+        <section class="stats-grid" aria-label="Resumen de eventos"><div class="stat"><span class="stat-icon peach"><Icon Name="calendar" /></span><div><span class="stat-label">Eventos en tu espacio</span><strong>@items.Count</strong></div><small>Historias por compartir</small></div><div class="stat"><span class="stat-icon sage"><Icon Name="globe" /></span><div><span class="stat-label">Invitaciones publicadas</span><strong>@items.Count(x => x.IsPublished)</strong></div><small>Listas para encontrarse</small></div><div class="stat"><span class="stat-icon lavender"><Icon Name="users" /></span><div><span class="stat-label">Asistentes confirmados</span><strong>@items.SelectMany(x => x.Responses).Where(x => x.Attending).Sum(x => x.PartySize)</strong></div><small>Personas para celebrar</small></div></section>
         <section class="events-section"><div class="section-toolbar"><div class="tabs" role="group" aria-label="Filtrar eventos"><button class="@(filter == "all" ? "active" : "")" @onclick='() => SetFilter("all")'>Todos <span>@items.Count</span></button><button class="@(filter == "published" ? "active" : "")" @onclick='() => SetFilter("published")'>Publicados</button><button class="@(filter == "draft" ? "active" : "")" @onclick='() => SetFilter("draft")'>Borradores</button><button class="@(filter == "trash" ? "active" : "")" @onclick='() => SetFilter("trash")' title="Papelera"><Icon Name="trash" /></button></div><label class="search-box"><Icon Name="search" /><input aria-label="Buscar eventos" placeholder="Buscar un momento…" @bind="search" @bind:event="oninput" /></label></div>
         <div class="event-grid">
             @foreach (var item in Filtered)
             {
-                <article class="event-card"><div class="event-cover"><img src="@item.CoverUrl" alt="Portada de @item.Title" loading="lazy" /><span class="event-status @(item.IsPublished ? "published" : "draft")"><span></span>@(item.IsPublished ? "Publicado" : "Borrador")</span><span class="event-kind">@ModuleCatalog.KindName(item.Kind)</span></div><div class="event-card-body"><h3>@item.Title</h3><div class="event-detail"><Icon Name="calendar" /><span>@item.LocalDate.ToString("d 'de' MMMM, yyyy")</span></div><div class="event-detail"><Icon Name="pin" /><span>@(string.IsNullOrWhiteSpace(item.Venue) ? "Un lugar por elegir" : item.Venue)</span></div><div class="card-bottom"><span class="guest-count"><Icon Name="users" /> @item.Responses.Where(x => x.Attending).Sum(x => x.PartySize) confirmados</span>@if (filter == "trash") { <button class="text-button" @onclick="() => Restore(item.Id)">Restaurar <Icon Name="back" /></button> } else { <a class="text-button" href="/eventos/@item.Id">Editar evento <Icon Name="arrow" /></a> }</div></div></article>
+                <article class="event-card"><div class="event-cover"><img src="@item.CoverUrl" alt="Portada de @item.Title" loading="lazy" /><span class="event-status @(item.IsPublished ? "published" : "draft")"><span></span>@(item.IsPublished ? "Publicado" : "Borrador")</span><span class="event-kind">@ModuleCatalog.KindName(item.Kind)</span></div><div class="event-card-body"><h3>@item.Title</h3>@if (item.OwnerId != userId) { <span class="pill subtle">Compartido con vos</span> }<div class="event-detail"><Icon Name="calendar" /><span>@item.LocalDate.ToString("d 'de' MMMM, yyyy")</span></div><div class="event-detail"><Icon Name="pin" /><span>@(string.IsNullOrWhiteSpace(item.Venue) ? "Un lugar por elegir" : item.Venue)</span></div><div class="card-bottom"><span class="guest-count"><Icon Name="users" /> @item.Responses.Where(x => x.Attending).Sum(x => x.PartySize) confirmados</span>@if (filter == "trash") { <button class="text-button" @onclick="() => Restore(item.Id)">Restaurar <Icon Name="back" /></button> } else { <a class="text-button" href="/eventos/@item.Id">Editar evento <Icon Name="arrow" /></a> }</div></div></article>
             }
             @if (filter != "trash" && string.IsNullOrWhiteSpace(search)) { <button class="new-event-card" @onclick="() => showCreate = true"><span class="add-circle"><Icon Name="plus" /></span><h3>Una nueva historia</h3><p>Casamientos, cumpleaños<br />y todo lo que merece un brindis.</p><span class="text-button">Crear un evento <Icon Name="arrow" /></span></button> }
         </div>
@@ -36,12 +37,12 @@
 @code {
     List<Celebration>? items;
     List<Celebration> deleted = [];
-    string filter = "all", search = "";
+    string filter = "all", search = "", userId = "";
     string? error;
     bool showCreate, busy;
     NewEventModel newEvent = new();
     IEnumerable<Celebration> Filtered => (filter == "trash" ? deleted : items ?? []).Where(x => (filter != "published" || x.IsPublished) && (filter != "draft" || !x.IsPublished) && x.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
-    protected override async Task OnInitializedAsync() => await Run(async () => items = await EventsService.ListAsync());
+    protected override async Task OnInitializedAsync() => await Run(async () => { userId = await CurrentUser.GetIdAsync(); items = await EventsService.ListAsync(); });
     async Task SetFilter(string value) { filter = value; if (value == "trash") await Run(async () => deleted = await EventsService.ListAsync(true)); }
     async Task Create() { if (busy) return; busy = true; await Run(async () => { var item = await EventsService.CreateAsync(newEvent.Title, newEvent.Kind, newEvent.Date); Navigation.NavigateTo($"/eventos/{item.Id}"); }); busy = false; }
     async Task Restore(Guid id) => await Run(async () => { await EventsService.SetDeletedAsync(id, false); deleted = await EventsService.ListAsync(true); items = await EventsService.ListAsync(); });
